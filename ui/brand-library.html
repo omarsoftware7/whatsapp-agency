@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brand Library</title>
+  <link rel="stylesheet" href="/ui/styles.css?v=20260125b">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6D6PKSE06T"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6D6PKSE06T');
+  </script>
+  <script>
+    (function (c, s, q, u, a, r, e) {
+        c.hj=c.hj||function(){(c.hj.q=c.hj.q||[]).push(arguments)};
+        c._hjSettings = { hjid: a };
+        r = s.getElementsByTagName('head')[0];
+        e = s.createElement('script');
+        e.async = true;
+        e.src = q + c._hjSettings.hjid + u;
+        r.appendChild(e);
+    })(window, document, 'https://static.hj.contentsquare.net/c/csq-', '.js', 6550468);
+  </script>
+</head>
+<body class="page app-page">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-lockup">
+          <div class="brand-logo">
+            <img id="sidebar-brand-logo" src="" alt="Brand logo">
+          </div>
+          <div>
+            <div class="brand-title" id="sidebar-brand-name">Adly</div>
+          </div>
+        </div>
+        <button class="icon-button sidebar-close" id="sidebar-close" aria-label="Close">✕</button>
+      </div>
+      <div class="sidebar-section"></div>
+      <div class="sidebar-section brand-switcher-slot" id="brand-switcher-slot-sidebar">
+        <div class="brand-switcher" id="brand-switcher">
+          <select class="select" id="brand-select"></select>
+          <a class="button add-brand-button" href="/ui/onboarding.html" aria-label="Add brand" data-i18n="common_add_brand">Add Brand</a>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" data-nav="dashboard" href="/ui/app.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-home"></use></svg><span data-i18n="nav_dashboard">Dashboard</span></a>
+        <a class="nav-item" data-nav="library" data-client-link="/ui/brand-library.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-library"></use></svg><span data-i18n="nav_library">Brand library</span></a>
+        <a class="nav-item" data-nav="landing-pages" data-client-link="/ui/landing-pages.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-landing"></use></svg><span data-i18n="nav_landing_pages">Landing pages</span></a>
+        <a class="nav-item" data-nav="leads" data-client-link="/ui/leads.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-leads"></use></svg><span data-i18n="nav_leads">Leads</span></a>
+        <a class="nav-item" data-nav="business-cards" data-client-link="/ui/business-card.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-card"></use></svg><span data-i18n="nav_business_cards">Business card</span></a>
+        <a class="nav-item" data-nav="posts" data-client-link="/ui/brand-posts.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-posts"></use></svg><span data-i18n="nav_posts">Posts</span></a>
+        <a class="nav-item" data-nav="content-plan" data-client-link="/ui/content-plan.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-calendar"></use></svg><span data-i18n="nav_content_plan">Plan next month</span></a>
+        <a class="nav-item" data-nav="pricing" href="/ui/pricing.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-pricing"></use></svg><span data-i18n="nav_pricing">Pricing</span></a>
+      </nav>
+      <div class="sidebar-section nav-credits" id="nav-credits"></div>
+      <div class="sidebar-section admin-nav" id="admin-nav" style="display:none;">
+        <div class="sidebar-label" data-i18n="nav_admin">Admin</div>
+        <a class="nav-item" id="admin-users-link" href="/ui/admin-users.html" data-i18n="common_users">Users</a>
+        <a class="nav-item" id="admin-brands-link" href="/ui/admin-brands.html" data-i18n="common_brands">Brands</a>
+        <a class="nav-item" id="admin-jobs-link" href="/ui/admin-jobs.html" data-i18n="common_jobs">Jobs</a>
+        <a class="nav-item" id="admin-landing-link" href="/ui/admin-landing-pages.html" data-i18n="common_landing_pages">Landing pages</a>
+        <a class="nav-item" id="admin-cards-link" href="/ui/admin-business-cards.html" data-i18n="common_business_cards">Business cards</a>
+        <a class="nav-item" id="admin-metrics-link" href="/ui/admin-metrics.html" data-i18n="common_metrics">Metrics</a>
+      </div>
+      <div class="sidebar-footer">
+        <select class="select lang-select" id="lang-select" aria-label="Language">
+          <option value="en">EN</option>
+          <option value="ar">AR</option>
+          <option value="he">HE</option>
+        </select>
+        <button class="button link" id="logout" data-i18n="common_logout">⎋ Logout</button>
+      </div>
+    </aside>
+    <div class="app-content">
+      <header class="app-header">
+        <div class="header-left">
+          <button class="icon-button" id="nav-toggle" aria-label="Open menu">☰</button>
+          <a class="user-chip" id="user-chip" href="/ui/profile.html" title="Edit profile">
+            <span class="user-avatar" id="user-avatar">U</span>
+            <span class="user-chip-text">
+              <span class="user-chip-row">
+                <span id="user-welcome" data-i18n="welcome_user">Welcome</span>
+                <span class="user-chip-caret">→</span>
+              </span>
+              <span id="plan-banner" class="plan-inline" style="display:none;"></span>
+            </span>
+          </a>
+        </div>
+        <div class="header-title" id="header-brand-name" style="display:none;">Adly</div>
+        <div class="header-actions">
+          <div id="header-credits" class="header-credits"></div>
+          <div id="mobile-credits" class="mobile-credits"></div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="section-header" style="margin-top: 16px;">
+          <div class="section-title" data-i18n="library_title">Brand Library</div>
+          <div class="muted" data-i18n="library_subtitle">All uploads and generated content</div>
+        </div>
+        <div class="library-grid" style="margin-top: 24px;">
+      <section class="card" id="uploads-section">
+        <div class="section-header">
+          <div class="section-title" data-i18n="library_my_uploads">My uploads</div>
+          <button class="button secondary section-toggle" type="button" data-target="uploads-list" data-i18n-title="common_collapse" onclick="toggleLibrarySection(this)">▾</button>
+        </div>
+        <div id="uploads-list" class="library-items"></div>
+        <div class="pagination" data-pagination="uploads">
+          <button class="button secondary" data-page="prev" data-i18n="common_prev">Prev</button>
+          <div class="muted" data-page="info" data-i18n="common_page">Page 1</div>
+          <button class="button secondary" data-page="next" data-i18n="common_next">Next</button>
+        </div>
+      </section>
+
+      <section class="card" id="generated-images-section">
+        <div class="section-header">
+          <div class="section-title" data-i18n="library_my_images">My images</div>
+          <button class="button secondary section-toggle" type="button" data-target="generated-images" data-i18n-title="common_collapse" onclick="toggleLibrarySection(this)">▾</button>
+        </div>
+        <div id="generated-images" class="library-items"></div>
+        <div class="pagination" data-pagination="images">
+          <button class="button secondary" data-page="prev" data-i18n="common_prev">Prev</button>
+          <div class="muted" data-page="info" data-i18n="common_page">Page 1</div>
+          <button class="button secondary" data-page="next" data-i18n="common_next">Next</button>
+        </div>
+      </section>
+
+      <section class="card" id="generated-videos-section">
+        <div class="section-header">
+          <div class="section-title" data-i18n="library_my_videos">My videos</div>
+          <button class="button secondary section-toggle" type="button" data-target="generated-videos" data-i18n-title="common_collapse" onclick="toggleLibrarySection(this)">▾</button>
+        </div>
+        <div id="generated-videos" class="library-items"></div>
+        <div class="pagination" data-pagination="videos">
+          <button class="button secondary" data-page="prev" data-i18n="common_prev">Prev</button>
+          <div class="muted" data-page="info" data-i18n="common_page">Page 1</div>
+          <button class="button secondary" data-page="next" data-i18n="common_next">Next</button>
+        </div>
+      </section>
+
+      <section class="card" id="generated-copies-section">
+        <div class="section-header">
+          <div class="section-title" data-i18n="library_my_ad_copies">My ad copies</div>
+          <button class="button secondary section-toggle" type="button" data-target="generated-copies" data-i18n-title="common_collapse" onclick="toggleLibrarySection(this)">▾</button>
+        </div>
+        <div id="generated-copies" class="library-items"></div>
+        <div class="pagination" data-pagination="copies">
+          <button class="button secondary" data-page="prev" data-i18n="common_prev">Prev</button>
+          <div class="muted" data-page="info" data-i18n="common_page">Page 1</div>
+          <button class="button secondary" data-page="next" data-i18n="common_next">Next</button>
+        </div>
+      </section>
+    </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="image-modal">
+    <div class="modal-card">
+      <button class="modal-close" id="image-modal-close" type="button" aria-label="Close">✕</button>
+      <img id="modal-image" src="" alt="Preview">
+    </div>
+  </div>
+
+  <script src="/ui/shared.js?v=20260126"></script>
+  <script>
+    initAppShell('library', { allowEmptyBrands: true });
+  </script>
+  <script src="/ui/brand-library.js"></script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+{
+  "name": "Generate Ad Copy",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "image_url"
+            },
+            {
+              "name": "client_id"
+            },
+            {
+              "name": "user_message"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -288,
+        1392
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Gemini response and build dynamic Instagram post HTML\nconst inputData = $input.first().json;\nconst geminiData = inputData.candidates?.[0]?.content?.parts?.[0]?.text || '';\n\nconst clientInfo = $('Get Client Info5').first().json.client;\nconst businessInfo = $('Get Client Info5').first().json.business_info;\nconst brandAssets = $('Get Client Info5').first().json.brand_assets;\nconst triggerData = $('When Executed by Another Workflow').first().json;\nconst imageUrl = triggerData.image_url;\nconst jobId = triggerData.job_id || 'test';\n\n// Parse ad copy\nlet adCopy;\ntry {\n  const jsonMatch = geminiData.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    adCopy = JSON.parse(jsonMatch[0]);\n  } else {\n    adCopy = {\n      headline: \"Special Offer! 🎉\",\n      body: geminiData.substring(0, 150) || \"Check out our latest announcement!\",\n      cta: \"Learn More\"\n    };\n  }\n} catch (e) {\n  adCopy = {\n    headline: \"Special Offer! 🎉\",\n    body: \"Check out our latest announcement!\",\n    cta: \"Learn More\"\n  };\n}\n\n// Get client data\nconst businessName = businessInfo.business_name || \"Business\";\nconst username = businessName.toLowerCase().replace(/\\s+/g, '_');\nconst logoUrl = brandAssets.logo_url\n// const logoUrl = brandAssets.logo_url || \"https://via.placeholder.com/64x64.png?text=Logo\";\nconst businessPhone = clientInfo.phone_number || \"\";\nconst businessAddress = businessInfo.business_address || \"\";\n\n// Build caption with ad copy\nlet captionText = `${adCopy.headline}\\n\\n${adCopy.body}\\n\\n${adCopy.cta}`;\n\n// Add contact info to caption if available\nif (businessPhone) {\n  captionText += `\\n\\n📱 ${businessPhone}`;\n}\nif (businessAddress) {\n  captionText += `\\n📍 ${businessAddress}`;\n}\n\n// Build dynamic Instagram post HTML\nconst html = `\n<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />\n  <title>IG Post – ${businessName}</title>\n  <style>\n    :root { --bg:#000; --fg:#fff; --muted:#9aa0a6; }\n    *{box-sizing:border-box}\n    html,body{height:100%}\n    body{\n      margin:0; background:var(--bg); color:var(--fg);\n      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;\n      display:flex; align-items:flex-start; justify-content:center;\n    }\n    .phone{\n      width:100%; max-width:375px; min-height:100vh; background:#000;\n    }\n    .row{display:flex;align-items:center;padding:10px 12px;gap:10px}\n    .avatar{width:32px;height:32px;border-radius:50%;overflow:hidden;background:#222}\n    .avatar img{width:100%;height:100%;object-fit:cover}\n    .username{font-weight:600;font-size:14px}\n    .more{margin-left:auto;opacity:.9}\n    .post-img{width:100%;aspect-ratio:1/1;display:block;object-fit:cover;background:#111}\n    .actions{display:flex;gap:16px;padding:10px 12px}\n    .actions .right{margin-left:auto}\n    .meta{padding:0 12px 12px}\n    .likes{font-weight:600;font-size:14px;margin:2px 0 6px}\n    .caption{font-size:14px;line-height:1.4;white-space:pre-wrap}\n    .caption .name{font-weight:600;margin-right:.35em}\n    .time{opacity:.6;font-size:12px;letter-spacing:.02em;margin-top:8px}\n  </style>\n</head>\n<body>\n  <div class=\"phone\" role=\"region\" aria-label=\"Instagram post\">\n    <div class=\"row\">\n      <div class=\"avatar\">\n        <img src=\"${logoUrl}\" alt=\"${businessName} logo\" onerror=\"this.src='https://via.placeholder.com/64x64.png?text=${businessName.charAt(0)}'\" />\n      </div>\n      <div class=\"username\">@${username}</div>\n      <div class=\"more\">•••</div>\n    </div>\n\n    <img class=\"post-img\"\n         src=\"${imageUrl}\"\n         alt=\"${businessName} post\" \n         crossorigin=\"anonymous\" />\n\n    <div class=\"actions\" aria-label=\"Post actions\">\n      <span aria-hidden=\"true\">♡</span>\n      <span aria-hidden=\"true\">💬</span>\n      <span aria-hidden=\"true\">➤</span>\n      <span class=\"right\" aria-hidden=\"true\">🔖</span>\n    </div>\n\n    <div class=\"meta\">\n      <div class=\"likes\">1,234 likes</div>\n      <div class=\"caption\"><span class=\"name\">@${username}</span>${captionText}</div>\n      <div class=\"time\">2h</div>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    html: html,\n    ad_copy: adCopy,\n    job_id: jobId,\n    full_text: captionText,\n    business_name: businessName,\n    username: username\n  }\n}];"
+      },
+      "id": "3c5f0084-ab59-4858-891b-5d3802fb4f13",
+      "name": "Build HTML Post1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        1392
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://getadly.com/api/get_client_info_by_id.php",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $json.client_id }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "57ba5ee8-b380-46bb-b0e8-2c3b9b6e246b",
+      "name": "Get Client Info5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -48,
+        1392
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YCgJKAnpFInsQ5y4",
+          "name": "Adly Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are a professional social media copywriter.\\n\\nCreate engaging ad copy for this announcement: {{ JSON.stringify(($('When Executed by Another Workflow').item.json.user_message || '')).slice(1, -1).replace(/\\\\\"/g, '\\\"') }}\\n\\nBusiness: {{ $json.business_info.business_name }}\\nIndustry: {{ $json.business_info.industry }}\\nBrand Tone: {{ $json.business_info.brand_tone }}\\n\\nIMPORTANT: Write the ad copy in the language that is not english if any of the info provided was written in tha language, otherwise all englsih. only.\\n\\nGenerate:\\n1. A catchy headline (1 line, max 60 chars)\\n2. Body text (2-3 sentences, max 150 chars)\\n3. Call-to-action (1 line, max 40 chars)\\n\\nUse emojis appropriately.\\n\\nFormat your response as JSON:\\n{\\n  \\\"headline\\\": \\\"...\\\",\\n  \\\"body\\\": \\\"...\\\",\\n  \\\"cta\\\": \\\"...\\\"\\n}\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"temperature\": 0.8,\n    \"topK\": 40,\n    \"topP\": 0.95,\n    \"maxOutputTokens\": 1024\n  }\n}\n",
+        "options": {}
+      },
+      "id": "b1f87e04-3bde-4435-9491-5133c11f6aec",
+      "name": "Generate Copy with Gemini5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        1392
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4sRjZ1djb5ySaGUv",
+          "name": "Gemini Api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.item.json.html;\n\nreturn [{\n  json: {\n    html: html,\n    ad_copy: $input.item.json.ad_copy,\n    job_id: $input.item.json.job_id,\n    full_text: $input.item.json.full_text\n  },\n  binary: {\n    data: {\n      data: Buffer.from(html).toString('base64'),\n      mimeType: 'text/html',\n      fileName: 'instagram_post.html'\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        1392
+      ],
+      "id": "ea9f4790-d5e3-49a2-aedf-0275709f260b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hcti.io/v1/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"html\": {{ JSON.stringify($json.html) }},\n  \"css\": \"\",\n  \"google_fonts\": \"Roboto\",\n  \"viewport_width\": 375,\n  \"viewport_height\": 812\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "036efc9f-cd75-4ae5-98e7-e6f02269dbdc",
+      "name": "HTML to Image (Free API)2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        848,
+        1392
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Nzl89zTixF6vvOwQ",
+          "name": "HTML 2 IMG"
+        },
+        "httpHeaderAuth": {
+          "id": "l1TTGgq44TUtYBYl",
+          "name": "Whatsapp Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "=965331439993382",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        1312
+      ],
+      "id": "0a198ce5-a92b-4a87-a480-909568c46b48",
+      "name": "Upload media",
+      "webhookId": "26018232-6dd7-49ec-b0c5-2cc199677ce9",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1312
+      ],
+      "id": "d7563c6f-b86a-4bdc-8f21-d6ede3ec7d4e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e945f1e-8dee-43d0-be20-7f606a267e7a",
+              "name": "image",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "b3f7186c-06ff-4f77-b018-73395df3a27e",
+              "name": "ad_copy",
+              "value": "={{ $('Build HTML Post1').item.json.full_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        1312
+      ],
+      "id": "075607fa-496c-460c-a21f-a8adbce90cee",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "=965331439993382",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        1760
+      ],
+      "id": "0d19e59c-47ab-4a49-9707-f76c4f32f016",
+      "name": "Upload media1",
+      "webhookId": "26018232-6dd7-49ec-b0c5-2cc199677ce9",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e945f1e-8dee-43d0-be20-7f606a267e7a",
+              "name": "image",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "b3f7186c-06ff-4f77-b018-73395df3a27e",
+              "name": "ad_copy",
+              "value": "=some ad copy text",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1536,
+        1760
+      ],
+      "id": "e827e32f-84a2-4f92-842d-b8fd46fce340",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.image_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1872
+      ],
+      "id": "b4731525-9527-4d2e-96bd-8547cd84e401",
+      "name": "HTTP Request1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e945f1e-8dee-43d0-be20-7f606a267e7a",
+              "name": "image",
+              "value": "=[]",
+              "type": "string"
+            },
+            {
+              "id": "b3f7186c-06ff-4f77-b018-73395df3a27e",
+              "name": "ad_copy",
+              "value": "=An Error has occurded, try later",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        1488
+      ],
+      "id": "ce5b3daa-34ce-4f91-9048-68e548350e8e",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e945f1e-8dee-43d0-be20-7f606a267e7a",
+              "name": "image",
+              "value": "=[]",
+              "type": "string"
+            },
+            {
+              "id": "b3f7186c-06ff-4f77-b018-73395df3a27e",
+              "name": "ad_copy",
+              "value": "=An Error has occurded, try later",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        1984
+      ],
+      "id": "80137ab6-7546-4376-b2bc-5852073f274c",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2016,
+        1568
+      ],
+      "id": "9a3d6d04-f044-4b4c-960f-335b7749dbd1",
+      "name": "HTTP Request2",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {
+    "HTTP Request2": [
+      {
+        "json": {
+          "url": "https://hcti.io/v1/image/04fdf676-d5f9-40ca-a580-21e15e1c97f5"
+        }
+      }
+    ],
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "image_url": "https://getadly.com/uploads/products/design_job108_1762593632_838481392204187.png",
+          "client_id": "9",
+          "user_message": "yes"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Client Info5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Post1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client Info5": {
+      "main": [
+        [
+          {
+            "node": "Generate Copy with Gemini5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Copy with Gemini5": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Post1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTML to Image (Free API)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML to Image (Free API)2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload media": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload media1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Upload media1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4e1218ec-8e33-4be2-a2a2-fdcd8f2518b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a7e367d5b049923fc2fe57ced60d0eee5246d33d838232f14626f381ac5f0963"
+  },
+  "id": "pOBidxHO4iga8psL",
+  "tags": []
+}

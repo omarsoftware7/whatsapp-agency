@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adly Web - Brand Onboarding</title>
+  <link rel="stylesheet" href="/ui/styles.css?v=20260125g">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6D6PKSE06T"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6D6PKSE06T');
+  </script>
+  <script>
+    (function (c, s, q, u, a, r, e) {
+        c.hj=c.hj||function(){(c.hj.q=c.hj.q||[]).push(arguments)};
+        c._hjSettings = { hjid: a };
+        r = s.getElementsByTagName('head')[0];
+        e = s.createElement('script');
+        e.async = true;
+        e.src = q + c._hjSettings.hjid + u;
+        r.appendChild(e);
+    })(window, document, 'https://static.hj.contentsquare.net/c/csq-', '.js', 6550468);
+  </script>
+</head>
+<body class="page app-page">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-lockup">
+          <div class="brand-logo">
+            <img id="sidebar-brand-logo" src="" alt="Brand logo">
+          </div>
+          <div>
+            <div class="brand-title" id="sidebar-brand-name">Adly</div>
+          </div>
+        </div>
+        <button class="icon-button sidebar-close" id="sidebar-close" aria-label="Close">✕</button>
+      </div>
+      <div class="sidebar-section"></div>
+      <div class="sidebar-section brand-switcher-slot" id="brand-switcher-slot-sidebar">
+        <div class="brand-switcher" id="brand-switcher">
+          <select class="select" id="brand-select"></select>
+          <a class="button add-brand-button" href="/ui/onboarding.html" aria-label="Add brand" data-i18n="common_add_brand">Add Brand</a>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" data-nav="dashboard" href="/ui/app.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-home"></use></svg><span data-i18n="nav_dashboard">Dashboard</span></a>
+        <a class="nav-item" data-nav="library" data-client-link="/ui/brand-library.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-library"></use></svg><span data-i18n="nav_library">Brand library</span></a>
+        <a class="nav-item" data-nav="landing-pages" data-client-link="/ui/landing-pages.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-landing"></use></svg><span data-i18n="nav_landing_pages">Landing pages</span></a>
+        <a class="nav-item" data-nav="leads" data-client-link="/ui/leads.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-leads"></use></svg><span data-i18n="nav_leads">Leads</span></a>
+        <a class="nav-item" data-nav="business-cards" data-client-link="/ui/business-card.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-card"></use></svg><span data-i18n="nav_business_cards">Business card</span></a>
+        <a class="nav-item" data-nav="posts" data-client-link="/ui/brand-posts.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-posts"></use></svg><span data-i18n="nav_posts">Posts</span></a>
+        <a class="nav-item" data-nav="content-plan" data-client-link="/ui/content-plan.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-calendar"></use></svg><span data-i18n="nav_content_plan">Plan next month</span></a>
+        <a class="nav-item" data-nav="pricing" href="/ui/pricing.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-pricing"></use></svg><span data-i18n="nav_pricing">Pricing</span></a>
+      </nav>
+      <div class="sidebar-section nav-credits" id="nav-credits"></div>
+      <div class="sidebar-section admin-nav" id="admin-nav" style="display:none;">
+        <div class="sidebar-label" data-i18n="nav_admin">Admin</div>
+        <a class="nav-item" id="admin-users-link" href="/ui/admin-users.html" data-i18n="common_users">Users</a>
+        <a class="nav-item" id="admin-brands-link" href="/ui/admin-brands.html" data-i18n="common_brands">Brands</a>
+        <a class="nav-item" id="admin-jobs-link" href="/ui/admin-jobs.html" data-i18n="common_jobs">Jobs</a>
+        <a class="nav-item" id="admin-landing-link" href="/ui/admin-landing-pages.html" data-i18n="common_landing_pages">Landing pages</a>
+        <a class="nav-item" id="admin-cards-link" href="/ui/admin-business-cards.html" data-i18n="common_business_cards">Business cards</a>
+        <a class="nav-item" id="admin-metrics-link" href="/ui/admin-metrics.html" data-i18n="common_metrics">Metrics</a>
+      </div>
+      <div class="sidebar-footer">
+        <select class="select lang-select" id="lang-select" aria-label="Language">
+          <option value="en">EN</option>
+          <option value="ar">AR</option>
+          <option value="he">HE</option>
+        </select>
+        <button class="button link" id="logout" data-i18n="common_logout">⎋ Logout</button>
+      </div>
+    </aside>
+    <div class="app-content">
+      <header class="app-header">
+        <div class="header-left">
+          <button class="icon-button" id="nav-toggle" aria-label="Open menu">☰</button>
+          <a class="user-chip" id="user-chip" href="/ui/profile.html" title="Edit profile">
+            <span class="user-avatar" id="user-avatar">U</span>
+            <span class="user-chip-text">
+              <span class="user-chip-row">
+                <span id="user-welcome" data-i18n="welcome_user">Welcome</span>
+                <span class="user-chip-caret">→</span>
+              </span>
+              <span id="plan-banner" class="plan-inline" style="display:none;"></span>
+            </span>
+          </a>
+        </div>
+        <div class="header-title" id="header-brand-name" style="display:none;">Adly</div>
+        <div class="header-actions">
+          <div id="header-credits" class="header-credits"></div>
+          <div id="mobile-credits" class="mobile-credits"></div>
+        </div>
+      </header>
+
+      <main class="container">
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <h2 id="onboarding-title" data-i18n="onboarding_title">Let’s set up your first brand</h2>
+          <p id="onboarding-intro" data-i18n="onboarding_intro">We’ll use this profile to keep your ads consistent and on‑brand.</p>
+        </div>
+        <a class="button secondary" href="/ui/app.html" data-i18n="onboarding_skip">Skip for now</a>
+      </div>
+      <div id="alert"></div>
+      <form id="onboarding-form" class="stack" enctype="multipart/form-data">
+        <div class="row">
+          <div class="field">
+            <label for="business_name"><span data-i18n="onboarding_business_name">Business name</span> <span class="required-star">*</span></label>
+            <input id="business_name" name="business_name" type="text" required>
+          </div>
+          <div class="field">
+            <label for="category"><span data-i18n="onboarding_category">Category</span> <span class="required-star">*</span></label>
+            <input id="category" name="category" type="text" data-i18n-placeholder="onboarding_category_placeholder" placeholder="Beauty, Restaurant, Retail" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="website"><span data-i18n="onboarding_website">Website</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+            <input id="website" name="website" type="url" data-i18n-placeholder="onboarding_website_placeholder" placeholder="https://">
+          </div>
+          <div class="field">
+            <label for="instagram"><span data-i18n="onboarding_instagram_handle">Instagram handle</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+            <input id="instagram" name="instagram" type="text" data-i18n-placeholder="onboarding_instagram_placeholder" placeholder="@brand">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="facebook_page_url"><span data-i18n="onboarding_facebook_url">Facebook page URL</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+            <input id="facebook_page_url" name="facebook_page_url" type="url" data-i18n-placeholder="onboarding_facebook_placeholder" placeholder="https://facebook.com/...">
+          </div>
+          <div class="field">
+            <label for="instagram_page_url"><span data-i18n="onboarding_instagram_url">Instagram page URL</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+            <input id="instagram_page_url" name="instagram_page_url" type="url" data-i18n-placeholder="onboarding_instagram_url_placeholder" placeholder="https://instagram.com/...">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="location"><span data-i18n="onboarding_location">Location</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+            <input id="location" name="location" type="text" data-i18n-placeholder="onboarding_location_placeholder" placeholder="Tel Aviv, Ramat Gan">
+            <div class="hint" data-i18n="onboarding_location_hint">This appears in your ad creatives and copy (e.g. "Visit us in Tel Aviv")</div>
+          </div>
+          <div class="field">
+            <label for="business_phone"><span data-i18n="onboarding_business_phone">Business phone</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+            <input id="business_phone" name="business_phone" type="tel" data-i18n-placeholder="onboarding_phone_placeholder" placeholder="+972-50-000-0000">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="price_range"><span data-i18n="onboarding_price_range">Price range</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+            <select id="price_range" name="price_range">
+              <option value="unknown" data-i18n="onboarding_price_unknown">Unknown</option>
+              <option value="low" data-i18n="onboarding_price_low">Low</option>
+              <option value="med" data-i18n="onboarding_price_med">Medium</option>
+              <option value="high" data-i18n="onboarding_price_high">High</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="country" data-i18n="onboarding_country">Country</label>
+            <select id="country" name="country">
+              <option value="Israel" data-i18n="country_israel">Israel</option>
+              <option value="Saudi Arabia" data-i18n="country_saudi">Saudi Arabia</option>
+              <option value="United Arab Emirates" data-i18n="country_uae">United Arab Emirates</option>
+              <option value="Qatar" data-i18n="country_qatar">Qatar</option>
+              <option value="Kuwait" data-i18n="country_kuwait">Kuwait</option>
+              <option value="Bahrain" data-i18n="country_bahrain">Bahrain</option>
+              <option value="Oman" data-i18n="country_oman">Oman</option>
+              <option value="Jordan" data-i18n="country_jordan">Jordan</option>
+              <option value="Egypt" data-i18n="country_egypt">Egypt</option>
+              <option value="Lebanon" data-i18n="country_lebanon">Lebanon</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="target_audience"><span data-i18n="onboarding_target_audience">Target audience</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+          <input id="target_audience" name="target_audience" type="text" data-i18n-placeholder="onboarding_target_placeholder" placeholder="Who is the ideal customer?">
+        </div>
+        <div class="field">
+          <label for="description"><span data-i18n="onboarding_description">Business description</span> <span class="required-star">*</span></label>
+          <textarea id="description" name="description" required></textarea>
+        </div>
+        <div class="field">
+          <label for="logo"><span data-i18n="onboarding_logo">Logo upload</span> <span class="optional-label" data-i18n="common_optional">(optional)</span></label>
+          <div id="brand-logo-preview" class="hint" data-i18n="onboarding_logo_empty">No logo uploaded yet.</div>
+          <label class="upload-box" for="logo" id="logo-drop">
+            <input id="logo" name="logo" type="file" accept="image/png,image/jpeg" class="upload-input">
+            <div class="upload-box-title" data-i18n="onboarding_logo_drop">Drop logo here or click to upload</div>
+            <div class="upload-box-subtitle" data-i18n="onboarding_logo_hint">PNG or JPG recommended. We use this to match your brand colors.</div>
+          </label>
+          <label class="checkbox-line">
+            <input type="checkbox" id="create-logo">
+            <span data-i18n="onboarding_logo_create">Don’t have a logo? Create one for me.</span>
+          </label>
+        </div>
+        <button class="button" type="submit" data-i18n="onboarding_submit">Finish onboarding</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="/ui/shared.js?v=20260126"></script>
+  <script>
+    initAppShell('onboarding', { allowEmptyBrands: true });
+    setDefaultTheme();
+    const form = document.getElementById('onboarding-form');
+    const alertBox = document.getElementById('alert');
+    const logoPreview = document.getElementById('brand-logo-preview');
+    const onboardingTitle = document.getElementById('onboarding-title');
+    const onboardingIntro = document.getElementById('onboarding-intro');
+    let existingBrandId = null;
+    let isAdminUser = false;
+    let adminUsers = [];
+
+    function getClientIdFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const value = params.get('client_id');
+      return value ? Number(value) : null;
+    }
+
+    function isWebBrand(brand) {
+      return (brand.phone_number || '').startsWith('web');
+    }
+
+    async function loadBrands() {
+      try {
+        const auth = await apiRequest('/web_auth.php', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'me' })
+        });
+        isAdminUser = auth.user?.role === 'admin';
+        if (isAdminUser) {
+          const usersResponse = await apiRequest('/web_admin_users.php');
+          adminUsers = usersResponse.items || [];
+          renderOwnerSelect();
+        }
+        const requestedId = getClientIdFromQuery();
+        const query = requestedId ? `?client_id=${requestedId}` : '';
+        const data = await apiRequest(`/web_brands.php${query}`);
+        if (data.items && data.items.length > 0) {
+          const pending = requestedId
+            ? data.items.find((b) => b.id === requestedId)
+            : data.items.find((b) => isWebBrand(b) && !b.onboarding_complete);
+          if (!pending) {
+            existingBrandId = null;
+            logoPreview.textContent = t('onboarding_logo_empty');
+            if (onboardingTitle) onboardingTitle.textContent = t('onboarding_title_additional');
+            if (onboardingIntro) onboardingIntro.textContent = t('onboarding_intro_additional');
+            return;
+          }
+          existingBrandId = pending.id;
+          if (onboardingTitle) onboardingTitle.textContent = t('onboarding_title_edit');
+          if (onboardingIntro) onboardingIntro.textContent = t('onboarding_intro_additional');
+          const pendingLogoUrl = getLogoUrl(pending);
+          setTheme({
+            primary: pending.primary_color || DEFAULT_THEME.primary,
+            secondary: pending.secondary_color || DEFAULT_THEME.secondary,
+            logoUrl: pendingLogoUrl,
+            name: pending.business_name || DEFAULT_THEME.name
+          });
+          form.business_name.value = pending.business_name || '';
+          form.category.value = pending.industry || '';
+          form.description.value = pending.business_description || '';
+          form.location.value = pending.business_address || '';
+          form.business_phone.value = pending.business_phone || '';
+          form.website.value = pending.website || '';
+          form.instagram.value = pending.instagram_handle || '';
+          form.facebook_page_url.value = pending.facebook_page_url || '';
+          form.instagram_page_url.value = pending.instagram_page_url || '';
+          form.target_audience.value = pending.target_audience || '';
+          form.price_range.value = pending.price_range || 'unknown';
+          form.country.value = pending.country || 'Israel';
+          if (pendingLogoUrl) {
+            logoPreview.innerHTML = `<img src="${pendingLogoUrl}" alt="Brand logo" style="max-width:120px;max-height:120px;border-radius:16px;border:1px solid #e6e8f0;">`;
+          } else {
+            logoPreview.textContent = t('onboarding_logo_empty');
+          }
+        } else {
+          if (onboardingTitle) onboardingTitle.textContent = t('onboarding_title_first');
+          if (onboardingIntro) onboardingIntro.textContent = t('onboarding_intro_first');
+        }
+      } catch (error) {
+        showAlert(alertBox, error.message);
+      }
+    }
+
+    function renderOwnerSelect() {
+      const formRow = document.createElement('div');
+      formRow.className = 'field';
+      formRow.innerHTML = `
+        <label for="owner_user_id">${t('admin_assign_brand')}</label>
+        <select id="owner_user_id" name="owner_user_id"></select>
+      `;
+      const select = formRow.querySelector('select');
+      adminUsers.forEach((user) => {
+        const option = document.createElement('option');
+        option.value = user.id;
+        option.textContent = user.email;
+        select.appendChild(option);
+      });
+      const existing = document.getElementById('owner_user_id');
+      if (existing) {
+        existing.closest('.field').replaceWith(formRow);
+      } else {
+        form.insertBefore(formRow, form.firstElementChild);
+      }
+    }
+
+    const logoInput = form.logo;
+    const logoDrop = document.getElementById('logo-drop');
+
+    function updateLogoDrop() {
+      if (!logoInput.files || !logoInput.files.length) return;
+      const file = logoInput.files[0];
+      
+      // Show image preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        logoPreview.innerHTML = `<img src="${e.target.result}" alt="Logo preview" style="max-width:120px;max-height:120px;border-radius:16px;border:1px solid #e6e8f0;">`;
+      };
+      reader.readAsDataURL(file);
+      
+      if (logoDrop) {
+        logoDrop.classList.add('has-file');
+        const title = logoDrop.querySelector('.upload-box-title');
+        if (title) title.textContent = file.name;
+      }
+    }
+
+    logoInput.addEventListener('change', updateLogoDrop);
+
+    loadBrands();
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearAlert(alertBox);
+
+      const payload = {
+        action: existingBrandId ? 'update_profile' : 'create',
+        client_id: existingBrandId,
+        business_name: form.business_name.value.trim(),
+        category: form.category.value.trim(),
+        website: form.website.value.trim(),
+        instagram: form.instagram.value.trim(),
+        facebook_page_url: form.facebook_page_url.value.trim(),
+        instagram_page_url: form.instagram_page_url.value.trim(),
+        target_audience: form.target_audience.value.trim(),
+        location: form.location.value.trim(),
+        business_phone: form.business_phone.value.trim(),
+        price_range: form.price_range.value,
+        description: form.description.value.trim(),
+        country: form.country.value,
+        onboarding_complete: true
+      };
+      if (!existingBrandId && isAdminUser) {
+        payload.owner_user_id = Number(document.getElementById('owner_user_id')?.value || 0) || null;
+      }
+
+      try {
+        const brand = await apiRequest('/web_brands.php', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (form.logo.files.length) {
+          const logoData = new FormData();
+          logoData.append('client_id', brand.client_id || brand.id);
+          logoData.append('logo', form.logo.files[0]);
+          await fetch(`${API_BASE}/web_brand_logo.php`, {
+            method: 'POST',
+            credentials: 'include',
+            body: logoData
+          });
+        }
+        if (document.getElementById('create-logo').checked && !form.logo.files.length) {
+          window.location.href = `/ui/logo-generator.html?client_id=${brand.client_id || brand.id}`;
+          return;
+        }
+        window.location.href = '/ui/app.html';
+      } catch (error) {
+        showAlert(alertBox, error.message);
+      }
+    });
+  </script>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

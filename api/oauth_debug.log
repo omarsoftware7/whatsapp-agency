@@ -1,0 +1,8 @@
+session_start {"host":"127.0.0.1","base_url":"http://127.0.0.1:8000","cookie_domain":"","secure":false,"session_id":"26bba7946e188ecd4415644962cb9a75","cookies_present":["adly_web","pma_lang","phpMyAdmin","pmaUser-1","pmaAuth-1"],"query":["action"],"time":"2026-01-24T13:29:58+02:00"}
+start {"state":"2d115af11f68da292928f87730192287","session_id":"26bba7946e188ecd4415644962cb9a75","time":"2026-01-24T13:29:58+02:00"}
+session_start {"host":"127.0.0.1","base_url":"http://127.0.0.1:8000","cookie_domain":"","secure":false,"session_id":"26bba7946e188ecd4415644962cb9a75","cookies_present":["adly_web"],"query":["action","state","code","scope","authuser","prompt"],"time":"2026-01-24T13:30:04+02:00"}
+token_exchange_failed {"http_code":401,"error":"invalid_client","error_description":"Unauthorized","curl_error":"","auth_code":"4/0ASc...E1lg","time":"2026-01-24T13:30:04+02:00"}
+session_start {"host":"127.0.0.1","base_url":"http://127.0.0.1:8000","cookie_domain":"","secure":false,"session_id":"26bba7946e188ecd4415644962cb9a75","cookies_present":["adly_web","pma_lang","phpMyAdmin","pmaUser-1","pmaAuth-1"],"query":["action"],"time":"2026-01-24T13:35:56+02:00"}
+start {"state":"0336d937d018c8e227b7444426fc0adf","session_id":"26bba7946e188ecd4415644962cb9a75","time":"2026-01-24T13:35:56+02:00"}
+session_start {"host":"127.0.0.1","base_url":"http://127.0.0.1:8000","cookie_domain":"","secure":false,"session_id":"26bba7946e188ecd4415644962cb9a75","cookies_present":["adly_web","pma_lang","phpMyAdmin","pmaUser-1","pmaAuth-1"],"query":["action"],"time":"2026-01-24T13:40:11+02:00"}
+start {"state":"021aa3e7e8fee4f49247405b2016f56b","session_id":"26bba7946e188ecd4415644962cb9a75","time":"2026-01-24T13:40:11+02:00"}
