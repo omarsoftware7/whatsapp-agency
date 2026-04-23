@@ -14,7 +14,7 @@ export type JobStage =
   | 'await_user_input' | 'pending' | 'generate_design' | 'generate_video'
   | 'await_design_approval' | 'generate_ad_copy' | 'await_copy_approval'
   | 'await_publish_approval' | 'publishing' | 'generate_multi_variants'
-  | 'completed' | 'rejected';
+  | 'multi_collect' | 'completed' | 'rejected';
 
 @Entity('creative_jobs')
 export class CreativeJob {
@@ -99,6 +99,9 @@ export class CreativeJob {
 
   @Column({ type: 'timestamp', nullable: true })
   published_at: Date;
+
+  @Column({ type: 'jsonb', nullable: true })
+  multi_products: any[];
 
   @Column({ default: false })
   is_bulk_sale: boolean;

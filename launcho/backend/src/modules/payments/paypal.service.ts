@@ -32,8 +32,8 @@ export class PaypalService {
       'grant_type=client_credentials',
       {
         auth: {
-          username: this.config.get('PAYPAL_CLIENT_ID'),
-          password: this.config.get('PAYPAL_CLIENT_SECRET'),
+          username: this.config.get<string>('PAYPAL_CLIENT_ID', ''),
+          password: this.config.get<string>('PAYPAL_CLIENT_SECRET', ''),
         },
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       },

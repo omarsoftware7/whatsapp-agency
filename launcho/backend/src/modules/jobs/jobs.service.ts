@@ -105,8 +105,8 @@ export class JobsService {
   async reset(jobId: number, userId: number) {
     const job = await this.getJobForUser(jobId, userId);
     job.current_stage = 'await_user_input';
-    job.design_variations = null;
-    job.ad_copy = null;
+    job.design_variations = [] as string[];
+    job.ad_copy = '';
     return this.jobRepo.save(job);
   }
 

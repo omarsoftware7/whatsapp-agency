@@ -245,7 +245,7 @@ export default function Dashboard() {
             </div>
 
             {/* Design variations */}
-            {selectedJob.design_variations?.length > 0 && (
+            {(selectedJob.design_variations?.length ?? 0) > 0 && (
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-700 mb-3">Designs</h3>
                 <div className="grid grid-cols-2 gap-3">

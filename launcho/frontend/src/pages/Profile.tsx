@@ -91,7 +91,7 @@ export default function Profile() {
       </div>
 
       {/* Change password */}
-      {!user?.['google_id'] && (
+      {!(user as any)?.google_id && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
           <h2 className="font-semibold text-gray-700">Change Password</h2>
           <input type="password" placeholder="Current password" value={pwForm.current_password} onChange={(e) => setPwForm((f) => ({ ...f, current_password: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />

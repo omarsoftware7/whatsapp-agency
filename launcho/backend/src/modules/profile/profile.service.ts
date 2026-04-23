@@ -49,6 +49,7 @@ export class ProfileService {
 
   async getLimits(userId: number) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
     return {
       plan_tier: user.plan_tier,
       text_credits: user.text_credits_remaining,

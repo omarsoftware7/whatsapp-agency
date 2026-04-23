@@ -17,8 +17,8 @@ export class GoogleOAuthController {
     req.session.oauth_state = state;
 
     const params = new URLSearchParams({
-      client_id: this.config.get('GOOGLE_CLIENT_ID'),
-      redirect_uri: this.config.get('GOOGLE_CALLBACK_URL'),
+      client_id: this.config.get<string>('GOOGLE_CLIENT_ID', ''),
+      redirect_uri: this.config.get<string>('GOOGLE_CALLBACK_URL', ''),
       response_type: 'code',
       scope: 'openid email profile',
       state,

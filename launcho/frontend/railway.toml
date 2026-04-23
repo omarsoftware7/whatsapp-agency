@@ -3,11 +3,8 @@ builder = "nixpacks"
 buildCommand = "npm ci && npm run build"
 
 [deploy]
-startCommand = "npm run start"
-healthcheckPath = "/health"
+startCommand = "npx serve dist -p ${PORT:-3000} -s"
+healthcheckPath = "/"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-
-[[services]]
-name = "api"

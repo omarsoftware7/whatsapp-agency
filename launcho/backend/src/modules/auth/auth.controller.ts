@@ -43,6 +43,7 @@ export class AuthController {
   async me(@CurrentUser() user: SessionUser, @Req() req: any) {
     const fullUser = await this.authService.findById(user.id);
     const referralCode = await this.authService.getReferralCode(user.id);
+    if (!fullUser) throw new Error('User not found');
     return { success: true, user: { ...this.authService.buildSessionData(fullUser), referral_code: referralCode } };
   }
 

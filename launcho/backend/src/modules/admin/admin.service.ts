@@ -31,7 +31,7 @@ export class AdminService {
   }
 
   async createUser(dto: any) {
-    const user = this.userRepo.create(dto);
+    const user = this.userRepo.create(dto) as unknown as WebUser;
     if (dto.password) await user.setPassword(dto.password);
     return this.userRepo.save(user);
   }

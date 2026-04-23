@@ -35,7 +35,7 @@ import { AppController } from './app.controller';
             ? { rejectUnauthorized: false }
             : false,
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: true,
         logging: config.get('NODE_ENV') !== 'production',
       }),
       inject: [ConfigService],
