@@ -53,23 +53,33 @@ export class WhatsappMediaController {
     };
     const ext = extMap[mimeType] ?? 'bin';
 
-    if (!filename) {
-      filename = `whatsapp_${Date.now()}_${mediaId}.${ext}`;
-    } else if (!path.extname(filename)) {
-      filename += `.${ext}`;
-    }
+    // Strip any path separators from user-supplied filename to prevent traversal
+    const safeBase = filename
+      ? path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, '_')
+      : null;
+
+    const safeFilename = safeBase
+      ? (path.extname(safeBase) ? safeBase : `${safeBase}.${ext}`)
+      : `whatsapp_${Date.now()}_${mediaId}.${ext}`;
 
     let subdir = 'products';
     if (mimeType.startsWith('video/')) subdir = 'generated';
     else if (!mimeType.startsWith('image/')) subdir = '';
 
-    const saveDir = path.join(uploadsDir, subdir);
+    const uploadsResolved = path.resolve(uploadsDir);
+    const saveDir = path.resolve(uploadsResolved, subdir);
     if (!fs.existsSync(saveDir)) fs.mkdirSync(saveDir, { recursive: true });
-    const savePath = path.join(saveDir, filename);
+    const savePath = path.resolve(saveDir, safeFilename);
+
+    // Double-check resolved save path stays inside uploads
+    if (!savePath.startsWith(uploadsResolved + path.sep)) {
+      throw new Error('Invalid save path');
+    }
+
     fs.writeFileSync(savePath, fileData);
 
-    const publicUrl = `${baseUrl}/uploads/${subdir ? subdir + '/' : ''}${filename}`;
+    const publicUrl = `${baseUrl}/uploads/${subdir ? subdir + '/' : ''}${safeFilename}`;
 
-    return { status: 'success', media_id: mediaId, mime_type: mimeType, filename, saved_path: savePath, public_url: publicUrl, file_size: fileData.length };
+    return { status: 'success', media_id: mediaId, mime_type: mimeType, filename: safeFilename, saved_path: savePath, public_url: publicUrl, file_size: fileData.length };
   }
 }

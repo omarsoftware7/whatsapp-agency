@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards, BadRequestException, NotFoundExcepti
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { WhatsappService } from './whatsapp.service';
 
-@Controller('jobs')
+@Controller('n8n/jobs')
 @UseGuards(ApiKeyGuard)
 export class JobsController {
   constructor(private readonly whatsapp: WhatsappService) {}

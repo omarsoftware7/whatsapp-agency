@@ -16,15 +16,13 @@ export class ApiKeyGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const key = this.extractKey(request);
 
-    this.logger.debug(`API key received: "${key}" (len=${key?.length ?? 0})`);
-
     if (!key) throw new UnauthorizedException('Missing API key');
 
     const found = await this.apiKeyRepo.findOne({
       where: { key_value: key, is_active: true },
     });
 
-    this.logger.debug(`DB lookup result: ${found ? `found id=${found.id} name=${found.key_name}` : 'NOT FOUND'}`);
+    this.logger.debug(`API key ...${key.slice(-4)}: ${found ? `matched "${found.key_name}"` : 'NOT FOUND'}`);
 
     if (!found) throw new UnauthorizedException('Invalid API key');
     return true;

@@ -7,7 +7,7 @@ import { Pool } from 'pg';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'debug'],
+    logger: ['error', 'warn', 'log'],
   });
   const logger = new Logger('Bootstrap');
 

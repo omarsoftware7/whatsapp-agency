@@ -18,10 +18,13 @@ export class FilesController {
 
   @Get('*')
   serveFile(@Param('0') filePath: string, @Res() res: Response) {
-    const uploadsDir = this.config.get('UPLOADS_DIR', './uploads');
-    // Sanitize path to prevent directory traversal
-    const safePath = path.normalize(filePath).replace(/^(\.\.[/\\])+/, '');
-    const fullPath = path.join(uploadsDir, safePath);
+    const uploadsDir = path.resolve(this.config.get('UPLOADS_DIR', './uploads'));
+    const fullPath = path.resolve(uploadsDir, filePath);
+
+    // Prevent path traversal: resolved path must start with uploads dir
+    if (!fullPath.startsWith(uploadsDir + path.sep) && fullPath !== uploadsDir) {
+      throw new NotFoundException('File not found');
+    }
 
     if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
       throw new NotFoundException('File not found');

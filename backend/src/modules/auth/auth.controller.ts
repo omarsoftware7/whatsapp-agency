@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Req, Res, HttpCode, UseGuards, Get } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -10,6 +11,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   async register(@Body() dto: RegisterDto, @Req() req: any) {
     const user = await this.authService.register(
       dto,
@@ -23,6 +25,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async login(@Body() dto: LoginDto, @Req() req: any) {
     const user = await this.authService.login(dto.email, dto.password);
     req.session.regenerate((err: any) => { if (err) throw err; });

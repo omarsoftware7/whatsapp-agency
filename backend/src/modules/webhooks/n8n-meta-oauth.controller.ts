@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Query, Res, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Res, UseGuards, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { WhatsappService } from './whatsapp.service';
 
 @Controller('meta-oauth')
 export class N8nMetaOAuthController {
+  private readonly logger = new Logger(N8nMetaOAuthController.name);
+
   constructor(
     private readonly whatsapp: WhatsappService,
     private readonly config: ConfigService,
@@ -40,6 +42,8 @@ export class N8nMetaOAuthController {
 // Handles /api/meta-oauth-complete?action=start&client_id=X (OAuth redirect flow sent to clients)
 @Controller('meta-oauth-complete')
 export class MetaOAuthCompleteController {
+  private readonly logger = new Logger(MetaOAuthCompleteController.name);
+
   constructor(private readonly config: ConfigService) {}
 
   @Get()
@@ -107,7 +111,8 @@ export class MetaOAuthCompleteController {
           message: 'Authorization successful! You can now publish to Facebook & Instagram.',
         });
       } catch (e: any) {
-        return res.status(500).send(`OAuth error: ${e.response?.data?.error?.message ?? e.message}`);
+        this.logger.error('Meta OAuth callback failed', e?.response?.data ?? e?.message);
+        return res.status(500).send('OAuth authorization failed. Please try again.');
       }
     }
 
