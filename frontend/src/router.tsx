@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import { AppShell } from './components/AppShell';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
@@ -52,5 +53,5 @@ export const router = createBrowserRouter([
       { path: 'jobs', element: <AdminJobs /> },
     ],
   },
-  { path: '/', element: <Login /> },
+  { path: '/', element: <Landing /> },
 ]);

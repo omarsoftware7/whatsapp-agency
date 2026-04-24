@@ -1,12 +1,12 @@
 # Only backend/ and frontend/ belong in this repo
-api/
-ui/
-assets/
-uploads/
-storage/
-docs/
-_docs/
-getadly/
+/api/
+/ui/
+/assets/
+/uploads/
+/storage/
+/docs/
+/_docs/
+/getadly/
 *.php
 *.log
 *.htaccess*
