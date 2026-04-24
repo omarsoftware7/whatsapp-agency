@@ -88,7 +88,8 @@ export class WhatsappService {
       if (!fs.existsSync(saveDir)) fs.mkdirSync(saveDir, { recursive: true });
       fs.writeFileSync(path.join(saveDir, filename), Buffer.from(fileRes.data));
 
-      return `${baseUrl}/uploads/${subdirHint}/${filename}`;
+      // Serve via protected /api/files/ endpoint
+      return `${baseUrl}/api/files/${subdirHint}/${filename}`;
     } catch (err) {
       this.logger.warn(`Failed to download WhatsApp media ${mediaId}: ${err.message}`);
       return null;
@@ -110,7 +111,7 @@ export class WhatsappService {
     const messageType: string = message.type ?? 'text';
     let text = message.text?.body?.trim() ?? '';
 
-    // Handle image message
+    // Handle image message — download immediately and replace Facebook URL with our own
     let imageUrl: string | null = null;
     let imageCaption = '';
     if (messageType === 'image') {
@@ -118,6 +119,10 @@ export class WhatsappService {
       imageCaption = message.image?.caption ?? '';
       if (mediaId) {
         imageUrl = await this.downloadWhatsappMedia(mediaId, 'wa', 'products');
+        if (imageUrl && message.image) {
+          message.image.url = imageUrl; // replace Facebook CDN URL with our protected URL
+          message.image.saved_url = imageUrl;
+        }
       }
     }
 
@@ -134,7 +139,7 @@ export class WhatsappService {
 
     // Onboarding not complete
     if (!client.onboarding_complete) {
-      return { status: 'onboarding_required', client_id: clientId, phone: from, step: client.onboarding_step, message_type: messageType, message_data: message };
+      return { status: 'onboarding_required', client_id: clientId, phone: from, step: client.onboarding_step, message_type: messageType, image_url: imageUrl ?? undefined, message_data: message };
     }
 
     // Credits check
@@ -501,7 +506,66 @@ export class WhatsappService {
       const daysLeft = (new Date(client.meta_page_token_expires).getTime() - Date.now()) / 86400000;
       expiresSoon = daysLeft < 7;
     }
-    return { connected: client.meta_tokens_valid, page_id: client.meta_page_id, instagram_account_id: client.instagram_account_id, expires: client.meta_page_token_expires, expires_soon: expiresSoon };
+    // Return connected as 1/0 (integer) so n8n numeric comparisons work
+    return { connected: client.meta_tokens_valid ? 1 : 0, page_id: client.meta_page_id, instagram_account_id: client.instagram_account_id, expires: client.meta_page_token_expires, expires_soon: expiresSoon };
+  }
+
+  async getClientInfo(clientId: number) {
+    const client = await this.clientRepo.findOne({ where: { id: clientId } });
+    if (!client) throw new Error('Client not found');
+    const baseUrl = this.config.get('API_BASE_URL', '');
+    const logoUrl = client.logo_filename ? `${baseUrl}/uploads/logos/${client.logo_filename}` : null;
+    const brandAssets = {
+      logo_url: logoUrl,
+      primary_color: client.primary_color,
+      secondary_color: client.secondary_color,
+      business_name: client.business_name,
+      brand_tone: client.brand_tone,
+      font_preference: client.font_preference,
+      industry: client.industry,
+      default_language: client.default_language,
+    };
+    return {
+      id: client.id,
+      phone_number: client.phone_number,
+      business_name: client.business_name,
+      business_description: client.business_description,
+      logo_url: logoUrl,
+      primary_color: client.primary_color,
+      secondary_color: client.secondary_color,
+      font_preference: client.font_preference,
+      brand_tone: client.brand_tone,
+      industry: client.industry,
+      default_language: client.default_language,
+      onboarding_complete: client.onboarding_complete,
+      brand_assets: brandAssets,
+      client: { id: client.id, phone_number: client.phone_number, business_name: client.business_name, logo_url: logoUrl, primary_color: client.primary_color, secondary_color: client.secondary_color, brand_assets: brandAssets },
+    };
+  }
+
+  async addMultiProduct(jobId: number, productData: any) {
+    const job = await this.jobRepo.findOne({ where: { id: jobId } });
+    if (!job) throw new Error('Job not found');
+    const products: any[] = Array.isArray(job.multi_products) ? [...job.multi_products] : [];
+    products.push(productData);
+    await this.jobRepo.update(jobId, { multi_products: products });
+    return { status: 'ok', job_id: jobId, product_count: products.length };
+  }
+
+  async updateLastProduct(jobId: number, productData: any) {
+    const job = await this.jobRepo.findOne({ where: { id: jobId } });
+    if (!job) throw new Error('Job not found');
+    const products: any[] = Array.isArray(job.multi_products) ? [...job.multi_products] : [];
+    if (products.length === 0) throw new Error('No products in job');
+    products[products.length - 1] = { ...products[products.length - 1], ...productData };
+    await this.jobRepo.update(jobId, { multi_products: products });
+    return { status: 'ok', job_id: jobId, updated_product: products[products.length - 1] };
+  }
+
+  async saveMultiVariants(jobId: number, designVariations: string[]) {
+    await this.jobRepo.update(jobId, { design_variations: designVariations, current_stage: 'await_design_approval' });
+    await this.logActivity(null, jobId, 'multi_variants_saved', { count: designVariations.length });
+    return { status: 'ok', job_id: jobId, design_count: designVariations.length, next_step: 'await_design_approval' };
   }
 
   // Publish to Meta using client-level tokens

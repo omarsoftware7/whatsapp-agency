@@ -13,7 +13,8 @@ export class WhatsappController {
   @Get()
   verify(@Query() query: any, @Res() res: any) {
     const verifyToken = this.config.get('META_VERIFY_TOKEN');
-    if (query['hub.mode'] === 'subscribe' && query['hub.verify_token'] === verifyToken) {
+    const incoming = query['hub.verify_token'] ?? '';
+    if (query['hub.mode'] === 'subscribe' && incoming === verifyToken) {
       return res.send(query['hub.challenge']);
     }
     return res.status(403).send('Verification failed');

@@ -87,6 +87,24 @@ export class JobsController {
       case 'approve_publish':
         return this.whatsapp.approvePublish(jobId);
 
+      case 'add_multi_product': {
+        const productData = body.product_data;
+        if (!productData) throw new BadRequestException('product_data required');
+        return this.whatsapp.addMultiProduct(jobId, productData);
+      }
+
+      case 'update_last_product': {
+        const productData = body.product_data;
+        if (!productData) throw new BadRequestException('product_data required');
+        return this.whatsapp.updateLastProduct(jobId, productData);
+      }
+
+      case 'save_multi_variants': {
+        const variants: string[] = body.design_variations;
+        if (!variants || !Array.isArray(variants)) throw new BadRequestException('design_variations array required');
+        return this.whatsapp.saveMultiVariants(jobId, variants);
+      }
+
       case 'save_bulk_products': {
         const products: any[] = body.products;
         if (!products || !Array.isArray(products)) throw new BadRequestException('products array required');

@@ -18,11 +18,11 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const PgSession = connectPgSimple(session);
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false });
 
   app.use(
     session({
-      store: new PgSession({ pool, tableName: 'session' }),
+      store: new PgSession({ pool, tableName: 'session', createTableIfMissing: true }),
       name: process.env.SESSION_NAME || 'launcho_web',
       secret: process.env.SESSION_SECRET || 'change_me',
       resave: false,
@@ -41,4 +41,7 @@ async function bootstrap() {
   console.log(`Launcho API running on port ${port}`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Bootstrap failed:', err);
+  process.exit(1);
+});
