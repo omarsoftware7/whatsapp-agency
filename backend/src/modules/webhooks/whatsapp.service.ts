@@ -379,9 +379,22 @@ export class WhatsappService {
   }
 
   async saveDesign(jobId: number, designVariations: string[], designPrompt: string, mediaType = 'image') {
-    await this.jobRepo.update(jobId, { design_variations: designVariations, design_prompt: designPrompt, media_type: mediaType, current_stage: 'await_design_approval' });
-    await this.logActivity(null, jobId, 'design_generated', { variation_count: designVariations.length, media_type: mediaType });
-    return { status: 'design_saved', job_id: jobId, variation_count: designVariations.length, media_type: mediaType, next_step: 'await_design_approval' };
+    const r2Urls = await Promise.all(
+      designVariations.map(async (url, i) => {
+        if (!url.startsWith('http')) return url;
+        try {
+          const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 30000 });
+          const baseName = `job_${jobId}_v${i + 1}_${Date.now()}`;
+          return await this.r2.uploadAsPng('generated', baseName, Buffer.from(res.data));
+        } catch (err) {
+          this.logger.warn(`Failed to mirror design ${i} to R2, keeping original URL: ${err}`);
+          return url;
+        }
+      }),
+    );
+    await this.jobRepo.update(jobId, { design_variations: r2Urls, design_prompt: designPrompt, media_type: mediaType, current_stage: 'await_design_approval' });
+    await this.logActivity(null, jobId, 'design_generated', { variation_count: r2Urls.length, media_type: mediaType });
+    return { status: 'design_saved', job_id: jobId, variation_count: r2Urls.length, media_type: mediaType, next_step: 'await_design_approval' };
   }
 
   async approveDesign(jobId: number, approvedIndex: number) {
