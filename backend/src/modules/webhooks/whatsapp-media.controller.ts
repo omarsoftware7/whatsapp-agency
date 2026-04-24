@@ -56,9 +56,10 @@ export class WhatsappMediaController {
     const finalFilename = safeFilename.includes('.') ? safeFilename : `${safeFilename}.${ext}`;
 
     const subdir = mimeType.startsWith('video/') ? 'generated' : mimeType.startsWith('image/') ? 'products' : '';
-    const key = this.r2.buildKey(subdir, finalFilename);
-    const publicUrl = await this.r2.upload(key, fileData, mimeType);
+    const publicUrl = mimeType.startsWith('image/')
+      ? await this.r2.uploadAsPng(subdir, finalFilename, fileData)
+      : await this.r2.upload(this.r2.buildKey(subdir, finalFilename), fileData, mimeType);
 
-    return { status: 'success', media_id: mediaId, mime_type: mimeType, filename: finalFilename, saved_path: key, public_url: publicUrl, file_size: fileData.length };
+    return { status: 'success', media_id: mediaId, mime_type: mimeType, filename: finalFilename, public_url: publicUrl, file_size: fileData.length };
   }
 }

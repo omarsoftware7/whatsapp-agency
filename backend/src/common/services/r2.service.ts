@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import * as sharp from 'sharp';
 
 @Injectable()
 export class R2Service {
@@ -34,6 +35,14 @@ export class R2Service {
     const url = `${this.publicUrl}/${key}`;
     this.logger.log(`Uploaded ${key} → ${url}`);
     return url;
+  }
+
+  // Convert any image to PNG before uploading (preserves transparency)
+  async uploadAsPng(subdir: string, baseName: string, data: Buffer): Promise<string> {
+    const png = await sharp(data).png().toBuffer();
+    const filename = baseName.replace(/\.[^.]+$/, '') + '.png';
+    const key = this.buildKey(subdir, filename);
+    return this.upload(key, png, 'image/png');
   }
 
   buildKey(subdir: string, filename: string): string {

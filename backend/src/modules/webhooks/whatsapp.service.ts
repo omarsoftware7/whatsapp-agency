@@ -86,15 +86,19 @@ export class WhatsappService {
         timeout: 30000,
       });
 
-      const extMap: Record<string, string> = {
-        'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png',
-        'image/webp': 'webp', 'video/mp4': 'mp4', 'image/gif': 'gif',
-        'audio/ogg': 'ogg', 'audio/mpeg': 'mp3',
-      };
-      const ext = extMap[mimeType] ?? 'jpg';
-      const filename = `wa_${Date.now()}_${mediaId}.${ext}`;
-      const key = this.r2.buildKey(subdirHint, filename);
+      const isImage = mimeType.startsWith('image/');
+      const baseName = `wa_${Date.now()}_${mediaId}`;
 
+      if (isImage) {
+        // Always store images as PNG to preserve transparency
+        return await this.r2.uploadAsPng(subdirHint, baseName, Buffer.from(fileRes.data));
+      }
+
+      const extMap: Record<string, string> = {
+        'video/mp4': 'mp4', 'audio/ogg': 'ogg', 'audio/mpeg': 'mp3',
+      };
+      const ext = extMap[mimeType] ?? 'bin';
+      const key = this.r2.buildKey(subdirHint, `${baseName}.${ext}`);
       return await this.r2.upload(key, Buffer.from(fileRes.data), mimeType);
     } catch (err) {
       this.logger.error(`Failed to download WhatsApp media ${mediaId}: ${err.message}`);
@@ -467,9 +471,7 @@ export class WhatsappService {
 
     try {
       const fileRes = await axios.get(logoUrl, { headers: { Authorization: `Bearer ${waToken}` }, responseType: 'arraybuffer' });
-      const mimeType = fileRes.headers['content-type'] || 'image/png';
-      const key = this.r2.buildKey('logos', filename);
-      savedUrl = await this.r2.upload(key, Buffer.from(fileRes.data), mimeType);
+      savedUrl = await this.r2.uploadAsPng('logos', filename, Buffer.from(fileRes.data));
     } catch (err) {
       this.logger.warn(`Could not upload logo to R2, using original URL: ${err.message}`);
     }

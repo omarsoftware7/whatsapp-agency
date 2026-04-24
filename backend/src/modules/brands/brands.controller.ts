@@ -54,9 +54,8 @@ export class BrandsController {
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: SessionUser,
   ) {
-    const filename = `${Date.now()}${extname(file.originalname)}`;
-    const key = this.r2.buildKey('logos', filename);
-    const url = await this.r2.upload(key, file.buffer, file.mimetype);
+    const baseName = `${Date.now()}`;
+    const url = await this.r2.uploadAsPng('logos', baseName, file.buffer);
     await this.brands.updateLogoUrl(id, url, user.id, user.role);
     return { success: true, url };
   }
