@@ -1,6 +1,5 @@
-import { Controller, Get, Param, Res, UseGuards, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, Res, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Response } from 'express';
@@ -12,7 +11,6 @@ const MIME_MAP: Record<string, string> = {
 };
 
 @Controller('files')
-@UseGuards(ApiKeyGuard)
 export class FilesController {
   constructor(private readonly config: ConfigService) {}
 
@@ -34,7 +32,7 @@ export class FilesController {
     const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
 
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
     fs.createReadStream(fullPath).pipe(res);
   }
 }
