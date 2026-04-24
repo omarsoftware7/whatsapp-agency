@@ -55,7 +55,8 @@ export class WhatsappMediaController {
       : `whatsapp_${Date.now()}_${mediaId}.${ext}`;
     const finalFilename = safeFilename.includes('.') ? safeFilename : `${safeFilename}.${ext}`;
 
-    const subdir = mimeType.startsWith('video/') ? 'generated' : mimeType.startsWith('image/') ? 'products' : '';
+    const subdirOverride: string | undefined = body.subdir;
+    const subdir = subdirOverride ?? (mimeType.startsWith('video/') ? 'generated' : mimeType.startsWith('image/') ? 'products' : '');
     const publicUrl = mimeType.startsWith('image/')
       ? await this.r2.uploadAsPng(subdir, finalFilename, fileData)
       : await this.r2.upload(this.r2.buildKey(subdir, finalFilename), fileData, mimeType);
