@@ -5,9 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { Client } from '../../entities/client.entity';
 import { CreativeJob } from '../../entities/creative-job.entity';
 import { ActivityLog } from '../../entities/activity-log.entity';
+import { R2Service } from '../../common/services/r2.service';
 import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const JOB_TYPE_MENU: Record<string, string> = {
   '1': 'announcement',
@@ -27,6 +26,7 @@ export class WhatsappService {
     @InjectRepository(CreativeJob) private jobRepo: Repository<CreativeJob>,
     @InjectRepository(ActivityLog) private logRepo: Repository<ActivityLog>,
     private readonly config: ConfigService,
+    private readonly r2: R2Service,
   ) {}
 
   private async logActivity(clientId: number | null, jobId: number | null, eventType: string, data: any = {}) {
@@ -65,14 +65,11 @@ export class WhatsappService {
   ): Promise<string | null> {
     const waToken = this.config.get('WA_ACCESS_TOKEN');
     const graphVersion = this.config.get('META_GRAPH_VERSION', 'v18.0');
-    const uploadsDir = this.config.get('UPLOADS_DIR', './uploads');
-    const baseUrl = this.config.get('API_BASE_URL', '');
 
     try {
       let downloadUrl: string = directUrl ?? '';
       let mimeType: string = mimeTypeHint ?? 'image/jpeg';
 
-      // Only call Graph API if we don't already have the URL
       if (!downloadUrl) {
         const urlRes = await axios.get(`https://graph.facebook.com/${graphVersion}/${mediaId}`, {
           headers: { Authorization: `Bearer ${waToken}` },
@@ -96,12 +93,9 @@ export class WhatsappService {
       };
       const ext = extMap[mimeType] ?? 'jpg';
       const filename = `wa_${Date.now()}_${mediaId}.${ext}`;
+      const key = this.r2.buildKey(subdirHint, filename);
 
-      const saveDir = path.join(uploadsDir, subdirHint);
-      if (!fs.existsSync(saveDir)) fs.mkdirSync(saveDir, { recursive: true });
-      fs.writeFileSync(path.join(saveDir, filename), Buffer.from(fileRes.data));
-
-      return `${baseUrl}/api/files/${subdirHint}/${filename}`;
+      return await this.r2.upload(key, Buffer.from(fileRes.data), mimeType);
     } catch (err) {
       this.logger.error(`Failed to download WhatsApp media ${mediaId}: ${err.message}`);
       return null;
@@ -467,21 +461,22 @@ export class WhatsappService {
 
   // Onboarding methods
   async onboardingLogoUploaded(clientId: number, logoUrl: string, logoFilename: string) {
-    const uploadsDir = this.config.get('UPLOADS_DIR', './uploads');
-    const logoDir = path.join(uploadsDir, 'logos');
-    if (!fs.existsSync(logoDir)) fs.mkdirSync(logoDir, { recursive: true });
-
     const waToken = this.config.get('WA_ACCESS_TOKEN');
-    let savedFilename = logoFilename;
+    const filename = logoFilename || `logo_${clientId}.png`;
+    let savedUrl = logoUrl;
+
     try {
       const fileRes = await axios.get(logoUrl, { headers: { Authorization: `Bearer ${waToken}` }, responseType: 'arraybuffer' });
-      savedFilename = logoFilename || `logo_${clientId}.png`;
-      fs.writeFileSync(path.join(logoDir, savedFilename), Buffer.from(fileRes.data));
-    } catch (_) {}
+      const mimeType = fileRes.headers['content-type'] || 'image/png';
+      const key = this.r2.buildKey('logos', filename);
+      savedUrl = await this.r2.upload(key, Buffer.from(fileRes.data), mimeType);
+    } catch (err) {
+      this.logger.warn(`Could not upload logo to R2, using original URL: ${err.message}`);
+    }
 
-    await this.clientRepo.update(clientId, { logo_filename: savedFilename, onboarding_step: 'describe_business' });
-    await this.logActivity(clientId, null, 'logo_uploaded', { filename: savedFilename });
-    return { status: 'logo_saved', client_id: clientId, logo_filename: savedFilename, next_step: 'analyze_logo_with_gpt5', gpt5_instructions: 'Analyze this logo image and extract: 1) Primary brand color (hex), 2) Secondary color (hex)' };
+    await this.clientRepo.update(clientId, { logo_filename: savedUrl, onboarding_step: 'describe_business' });
+    await this.logActivity(clientId, null, 'logo_uploaded', { url: savedUrl });
+    return { status: 'logo_saved', client_id: clientId, logo_url: savedUrl, logo_filename: filename, next_step: 'analyze_logo_with_gpt5', gpt5_instructions: 'Analyze this logo image and extract: 1) Primary brand color (hex), 2) Secondary color (hex)' };
   }
 
   async onboardingLogoAnalyzed(clientId: number, primaryColor: string, secondaryColor: string) {

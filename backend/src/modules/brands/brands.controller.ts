@@ -1,18 +1,22 @@
 import {
-  Controller, Get, Post, Body, Query, UseGuards, UseInterceptors,
+  Controller, Get, Post, Body, UseGuards, UseInterceptors,
   UploadedFile, Param, ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname } from 'path';
 import { SessionGuard } from '../../common/guards/session.guard';
 import { CurrentUser, SessionUser } from '../../common/decorators/current-user.decorator';
 import { BrandsService } from './brands.service';
+import { R2Service } from '../../common/services/r2.service';
 
 @Controller('brands')
 @UseGuards(SessionGuard)
 export class BrandsController {
-  constructor(private readonly brands: BrandsService) {}
+  constructor(
+    private readonly brands: BrandsService,
+    private readonly r2: R2Service,
+  ) {}
 
   @Get()
   list(@CurrentUser() user: SessionUser) {
@@ -44,20 +48,16 @@ export class BrandsController {
   }
 
   @Post(':id/logo')
-  @UseInterceptors(
-    FileInterceptor('logo', {
-      storage: diskStorage({
-        destination: './uploads/logos',
-        filename: (_req, file, cb) => cb(null, `${Date.now()}${extname(file.originalname)}`),
-      }),
-    }),
-  )
-  uploadLogo(
+  @UseInterceptors(FileInterceptor('logo', { storage: memoryStorage() }))
+  async uploadLogo(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: SessionUser,
   ) {
-    // TODO: extract dominant colors via sharp and update client record
-    return { success: true, filename: file.filename };
+    const filename = `${Date.now()}${extname(file.originalname)}`;
+    const key = this.r2.buildKey('logos', filename);
+    const url = await this.r2.upload(key, file.buffer, file.mimetype);
+    await this.brands.updateLogoUrl(id, url, user.id, user.role);
+    return { success: true, url };
   }
 }

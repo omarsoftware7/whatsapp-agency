@@ -88,6 +88,12 @@ export class BrandsService {
     return client;
   }
 
+  async updateLogoUrl(clientId: number, url: string, userId: number, role: string) {
+    if (role !== 'admin') await this.ensureOwner(clientId, userId);
+    await this.clientRepo.update(clientId, { logo_filename: url });
+    return { success: true };
+  }
+
   async delete(clientId: number, userId: number, role: string) {
     if (role !== 'admin') await this.ensureOwner(clientId, userId);
     await this.clientRepo.delete(clientId);

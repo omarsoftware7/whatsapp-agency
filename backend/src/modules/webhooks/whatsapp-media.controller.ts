@@ -2,9 +2,8 @@ import { Controller, Post, Body, UseGuards, BadRequestException } from '@nestjs/
 import { ConfigService } from '@nestjs/config';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { WhatsappService } from './whatsapp.service';
+import { R2Service } from '../../common/services/r2.service';
 import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Controller('get-whatsapp-media')
 @UseGuards(ApiKeyGuard)
@@ -12,6 +11,7 @@ export class WhatsappMediaController {
   constructor(
     private readonly whatsapp: WhatsappService,
     private readonly config: ConfigService,
+    private readonly r2: R2Service,
   ) {}
 
   @Post()
@@ -24,8 +24,7 @@ export class WhatsappMediaController {
 
     const waToken = this.config.get('WA_ACCESS_TOKEN');
     const graphVersion = this.config.get('META_GRAPH_VERSION', 'v18.0');
-    const uploadsDir = this.config.get('UPLOADS_DIR', './uploads');
-    const baseUrl = this.config.get('API_BASE_URL', '');
+
 
     // Step 1: get media URL
     const urlRes = await axios.get(`https://graph.facebook.com/${graphVersion}/${mediaId}`, {
@@ -45,41 +44,21 @@ export class WhatsappMediaController {
       return { status: 'success', media_id: mediaId, mime_type: mimeType, base64_data: fileData.toString('base64'), file_size: fileData.length };
     }
 
-    // Step 3: save to server
     const extMap: Record<string, string> = {
       'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png',
       'image/webp': 'webp', 'video/mp4': 'mp4', 'image/gif': 'gif',
       'audio/ogg': 'ogg', 'audio/mpeg': 'mp3', 'application/pdf': 'pdf',
     };
     const ext = extMap[mimeType] ?? 'bin';
-
-    // Strip any path separators from user-supplied filename to prevent traversal
-    const safeBase = filename
-      ? path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, '_')
-      : null;
-
-    const safeFilename = safeBase
-      ? (path.extname(safeBase) ? safeBase : `${safeBase}.${ext}`)
+    const safeFilename = filename
+      ? filename.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^\.+/, '')
       : `whatsapp_${Date.now()}_${mediaId}.${ext}`;
+    const finalFilename = safeFilename.includes('.') ? safeFilename : `${safeFilename}.${ext}`;
 
-    let subdir = 'products';
-    if (mimeType.startsWith('video/')) subdir = 'generated';
-    else if (!mimeType.startsWith('image/')) subdir = '';
+    const subdir = mimeType.startsWith('video/') ? 'generated' : mimeType.startsWith('image/') ? 'products' : '';
+    const key = this.r2.buildKey(subdir, finalFilename);
+    const publicUrl = await this.r2.upload(key, fileData, mimeType);
 
-    const uploadsResolved = path.resolve(uploadsDir);
-    const saveDir = path.resolve(uploadsResolved, subdir);
-    if (!fs.existsSync(saveDir)) fs.mkdirSync(saveDir, { recursive: true });
-    const savePath = path.resolve(saveDir, safeFilename);
-
-    // Double-check resolved save path stays inside uploads
-    if (!savePath.startsWith(uploadsResolved + path.sep)) {
-      throw new Error('Invalid save path');
-    }
-
-    fs.writeFileSync(savePath, fileData);
-
-    const publicUrl = `${baseUrl}/uploads/${subdir ? subdir + '/' : ''}${safeFilename}`;
-
-    return { status: 'success', media_id: mediaId, mime_type: mimeType, filename: safeFilename, saved_path: savePath, public_url: publicUrl, file_size: fileData.length };
+    return { status: 'success', media_id: mediaId, mime_type: mimeType, filename: finalFilename, saved_path: key, public_url: publicUrl, file_size: fileData.length };
   }
 }
