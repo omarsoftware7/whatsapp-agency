@@ -378,19 +378,37 @@ export class WhatsappService {
     return { status: 'input_saved', job_id: jobId, next_step: 'generate_design' };
   }
 
+  private async resolveToR2(value: string, jobId: number, index: number): Promise<string> {
+    const baseName = `job_${jobId}_v${index + 1}_${Date.now()}`;
+    try {
+      let fileData: Buffer;
+      if (value.startsWith('http')) {
+        const res = await axios.get(value, { responseType: 'arraybuffer', timeout: 30000 });
+        fileData = Buffer.from(res.data);
+      } else {
+        // Treat as WhatsApp media ID
+        const waToken = this.config.get('WA_ACCESS_TOKEN');
+        const graphVersion = this.config.get('META_GRAPH_VERSION', 'v18.0');
+        const urlRes = await axios.get(`https://graph.facebook.com/${graphVersion}/${value}`, {
+          headers: { Authorization: `Bearer ${waToken}` },
+        });
+        const dlRes = await axios.get(urlRes.data.url, {
+          headers: { Authorization: `Bearer ${waToken}` },
+          responseType: 'arraybuffer',
+          timeout: 30000,
+        });
+        fileData = Buffer.from(dlRes.data);
+      }
+      return await this.r2.uploadAsPng('generated', baseName, fileData);
+    } catch (err) {
+      this.logger.warn(`Failed to resolve design ${index} to R2, keeping original: ${err}`);
+      return value;
+    }
+  }
+
   async saveDesign(jobId: number, designVariations: string[], designPrompt: string, mediaType = 'image') {
     const r2Urls = await Promise.all(
-      designVariations.map(async (url, i) => {
-        if (!url.startsWith('http')) return url;
-        try {
-          const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 30000 });
-          const baseName = `job_${jobId}_v${i + 1}_${Date.now()}`;
-          return await this.r2.uploadAsPng('generated', baseName, Buffer.from(res.data));
-        } catch (err) {
-          this.logger.warn(`Failed to mirror design ${i} to R2, keeping original URL: ${err}`);
-          return url;
-        }
-      }),
+      designVariations.map((v, i) => this.resolveToR2(v, jobId, i)),
     );
     await this.jobRepo.update(jobId, { design_variations: r2Urls, design_prompt: designPrompt, media_type: mediaType, current_stage: 'await_design_approval' });
     await this.logActivity(null, jobId, 'design_generated', { variation_count: r2Urls.length, media_type: mediaType });
