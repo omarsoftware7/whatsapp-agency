@@ -418,10 +418,21 @@ export class WhatsappService {
   async approveDesign(jobId: number, approvedIndex: number) {
     const job = await this.jobRepo.findOne({ where: { id: jobId } });
     if (!job) return null;
+
+    // Resolve any stored IDs to R2 URLs before approving
+    const rawVariations: string[] = job.design_variations ?? [];
+    const needsResolution = rawVariations.some(v => !v.startsWith('http'));
+    const variations = needsResolution
+      ? await Promise.all(rawVariations.map((v, i) => this.resolveToR2(v, jobId, i)))
+      : rawVariations;
+    if (needsResolution) {
+      await this.jobRepo.update(jobId, { design_variations: variations });
+    }
+
     const nextStage = job.job_type === 'multi_mode' ? 'generate_multi_variants' : 'generate_ad_copy';
     await this.jobRepo.update(jobId, { design_approved: true, design_approved_at: new Date(), approved_design_index: approvedIndex, current_stage: nextStage });
     await this.logActivity(null, jobId, 'design_approved', { index: approvedIndex });
-    return { status: 'design_approved', job_id: jobId, approved_index: approvedIndex, approved_design_url: (job.design_variations ?? [])[approvedIndex], design_variations: job.design_variations, next_step: nextStage };
+    return { status: 'design_approved', job_id: jobId, approved_index: approvedIndex, approved_design_url: variations[approvedIndex], design_variations: variations, next_step: nextStage };
   }
 
   async rejectDesign(jobId: number) {
