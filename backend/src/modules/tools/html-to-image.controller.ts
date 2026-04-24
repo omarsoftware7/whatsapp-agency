@@ -1,8 +1,6 @@
 import { Controller, Post, Body, UseGuards, BadRequestException, Logger } from '@nestjs/common';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { R2Service } from '../../common/services/r2.service';
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-const puppeteer: any = require('puppeteer-core');
 
 @Controller('tools/html-to-image')
 @UseGuards(ApiKeyGuard)
@@ -18,6 +16,8 @@ export class HtmlToImageController {
     const width = body.width ?? 375;
     const height = body.height ?? 812;
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+    const puppeteer: any = require('puppeteer-core');
     const browser = await puppeteer.launch({
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
       args: [
