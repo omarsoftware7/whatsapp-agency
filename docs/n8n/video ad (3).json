@@ -1,0 +1,2331 @@
+{
+  "name": "video ad",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1344,
+        320
+      ],
+      "id": "898e27fa-253c-46bb-bba3-667ad3ee95d7",
+      "name": "Telegram Trigger",
+      "webhookId": "259d7669-e8a0-450f-a153-afcb589ebfbe",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot[yourbot-token-here]/getFile?file_id={{ $('Telegram Trigger').item.json.message.photo[3].file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1360,
+        688
+      ],
+      "id": "08124cc4-402c-4a75-bfa0-7d4c570d144d",
+      "name": "Get Image Path",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Great! Your creative is now in progress. This will take a few minutes...",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1312,
+        128
+      ],
+      "id": "94fb6ce8-1705-4a34-aa57-fad41a119f9f",
+      "name": "In Progress",
+      "webhookId": "991c4161-4375-4b3c-b00e-ef0afa9cc36c",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "file": "={{ $('Get GPT-Image').item.json.data.response.resultUrls[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1328,
+        -48
+      ],
+      "id": "b7cdb605-e29d-4cdd-9ab6-3ce1abd02a12",
+      "name": "Send Image",
+      "webhookId": "0b80f29f-4ecf-40df-9163-b4e5f48fb9e9",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Got it! I'm now crafting your prompts...",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1344,
+        496
+      ],
+      "id": "d8cf4f82-7c0f-4d56-a475-e94adda5c2e5",
+      "name": "Received",
+      "webhookId": "3aecef87-d2e6-4970-a25e-8a6767dc4f81",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "file": "={{ $('Get Veo3').item.json.data.response.resultUrls[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1168,
+        304
+      ],
+      "id": "7236328a-f1a3-4022-a757-e96d86c1ab52",
+      "name": "Send Video",
+      "webhookId": "beff1778-d0f4-4a14-a42d-ba3ce3b663ea",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "imageUrl"
+            }
+          ]
+        }
+      },
+      "id": "34eb0011-c94f-4963-bd67-4e524760a600",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -528,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.image_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -528,
+        304
+      ],
+      "id": "f3217475-abb6-40b0-afe0-c02806ef9077",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -304,
+        -208
+      ],
+      "id": "035d9e67-3f27-4103-bcd1-23b7d76ede7a",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "cjdBp7RrV1Vi3OwY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"image_prompt\": \"string\",\n  \"video_prompt\": \"stringified JSON\",\n  \"caption\": \"short caption\",\n  \"creative_summary\": \"summary of the combined visual concept\",\n  \"aspect_ratio\": \"vertical or horizontal\",\n  \"video_model\": \"veo3 or veo3_fast\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        -208
+      ],
+      "id": "0b5997eb-fe67-4133-8566-6a2896946d6c",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -208
+      ],
+      "id": "b145ea97-7884-449e-9cd4-dbbe5f463d0b",
+      "name": "Think1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "Describe the product and brand in this image in full detail. Fully ignore the background. Focus ONLY on the product.",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -528,
+        576
+      ],
+      "id": "c03b8900-54e1-4761-8a17-4066a9854899",
+      "name": "Analyze Image1",
+      "credentials": {
+        "openAiApi": {
+          "id": "cjdBp7RrV1Vi3OwY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e46f416f-7609-455f-8795-72f52ba1e563",
+              "name": "image_prompt",
+              "value": "={{ $json.output.image_prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "6ae1e83d-d93f-497f-b1cb-23b71d219907",
+              "name": "video_prompt",
+              "value": "={{ $json.output.video_prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "0237134f-13d5-4c42-8ea0-2b8ec76be67d",
+              "name": "caption",
+              "value": "={{ $json.output.caption }}",
+              "type": "string"
+            },
+            {
+              "id": "4b03ccd0-8a8a-40b3-bbf6-ff4d3aa64dec",
+              "name": "creative_summary",
+              "value": "={{ $json.output.creative_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "87963f3e-497f-44e4-9d4b-02bf95cebe6a",
+              "name": "aspect_ratio",
+              "value": "={{ $json.output.aspect_ratio }}",
+              "type": "string"
+            },
+            {
+              "id": "6de93348-769a-47c5-88c2-471cd0807fbf",
+              "name": "video_model",
+              "value": "={{ $json.output.video_model }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        -32
+      ],
+      "id": "9403d3de-a85f-4869-8dbb-c0211cad5ad4",
+      "name": "Set Prompts1"
+    },
+    {
+      "parameters": {
+        "content": "# INPUT",
+        "height": 880,
+        "width": 260,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        -80
+      ],
+      "id": "6870d205-0053-4246-9403-8bfb5d00c96a",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the initial creative brief:\n\nDescription of the product:\n{{ $json.choices[0].message.content }}\n\nUse the Think tool to double check your output\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=system_prompt: |\n  ## 🎨 SYSTEM PROMPT: Image + Video Prompt Generator for Product Creatives\n\n  A – Ask:\n    Generate an image prompt and a video prompt (both stringified as JSON), plus a short caption and a structured creative summary, based on a product reference image and the user’s creative intent.\n\n  G – Guidance:\n    role: Seasoned creative director with deep expertise in visual storytelling, branding, and advertising\n    output_count: 1\n    character_limit: No hard limit, but each output should remain focused and readable\n\n    constraints: \n      - Prioritise dynamic backgrounds and elements, with scenes that are fully detailed out (unless otherwise specified by the user)\n      - Reference image must be mentioned and used for detailed visual context\n      - Preserve product label, color, and packaging fidelity\n      - Avoid vague, generic, or brand-inaccurate descriptions\n      - If the reference image contains background elements, ignore them unless essential—focus solely on the product as the visual centerpiece\n      - If the user’s brief lacks detail, creatively interpret their intent and propose a well-directed image and video concept. Be imaginative — act like a creative director, not a mirror.\n      - When the brief is vague, choose from one of the provided inspirational examples below and adapt its style, tone, and structure to fit the specific product and context.\n      - The video setting must align with the image setting \n\n      - \"image_prompt\" must be a string and include the following. Make sure to mention to Keep the product’s packaging, label, text, logo and all design details 100% sharp, clear and untouched. Make sure the background color matches or complements the dominant packaging color. Use realistic shadows and depth. :\n        - description\n        - setting\n        - background\n        - composition\n        - elements\n        - lighting\n        - camera_type\n        - camera_settings\n        - effects\n        - style\n\n      - \"video_prompt\" must be stringified JSON and include:\n        - description (scene must always start with the product already in frame)\n        - setting (describe a setting same as the image)\n        - camera_type (including camera settings)\n        - camera_movement (prioritise simple camera movement)\n        - action (what the product will do, if any)\n        - lighting\n        - other_details\n        - dialogue (optional, depending on user intent)\n        - music\n        - ending (optional)\n        - keywords (optional)\n\n      - \"creative_summary\" must begin with a short, non-technical paragraph summarizing where the video is, what's the style, and what will happen. Then use:\n\n        📢 One-paragraph overview of what will happen in the video\n\n        🖼️ IMAGE:\n        - just summarize the image prompt above but in bullet points\n\n        🎬 VIDEO:\n        - just summarize the video prompt above but in bullet points\n\n        📐 Aspect Ratio: 16:9 or 9:16  (default is 9:16)\n        🧠 Model: veo3 or veo3_fast (default is veo3_fast)\n\n      - \"caption\" must include at least one emoji and 1–2 relevant hashtags. Keep it punchy and optimized for social sharing.\n\n  E – Examples:\n    🟢 good_examples:\n\n      Eye-Catchy Product Video:\n      Capture a cinematic shot of a sunlit Scandinavian bedroom. A sealed IKEA box trembles, opens, and flat pack furniture assembles rapidly into a serene, styled room highlighted by a yellow IKEA throw on the bed. Elements include a fixed wide-angle camera, natural warm lighting with cool accents, and details such as the IKEA box (logo visible), bed with yellow throw, bedside tables, lamps, wardrobe, shelves, mirror, art, rug, curtains, reading chair, and plants. The motion features the box opening and furniture assembling precisely and rapidly. It ends in a calm, modern space with the signature yellow IKEA accent. Keywords include 16:9, IKEA, Scandinavian, fast assembly, no text, warm & cool tones. No text should appear on screen.\n\n      Product Photoshoot:\n      Create a hyper-realistic, high-energy product photo using my exact product from the reference image I provide. Keep the product’s packaging, label, text, logo and all design details 100% sharp, clear and untouched — do NOT blur or change any part of the label or text. Place the product in the center with an explosion of its natural flavor ingredients (for example: cereal balls, chocolate pieces, milk splashes, strawberries, or other matching ingredients). Make sure the background color matches or complements the dominant packaging color. Add dynamic lighting and a vivid splash effect to create energy, but keep the product label perfectly readable and in focus. Use realistic shadows and depth. The final image should feel delicious, fun and eye-catching, with every product detail fully visible and sharp.\n\n      Stylized Editorial Portrait:\n      Capture a cinematic 90s neo-noir portrait of a femme fatale lounging on a bed, legs bent upward and face half-shadowed beneath a sharp black bob. She wears a dark scoop-neck top, bold red lipstick, and holds a smoldering cigarette, its smoke curling into the moody atmosphere. Style the scene with faux 35mm film aesthetics — sepia-tinted shadows, faded blacks, light leaks, timestamp overlays, and soft grain. Use studio-grade top-down lighting mixed with ambient TV or lamp glow to emphasize glossy skin, smoke diffusion, and tactile surfaces like leather and paper. Contrast should be high but natural, blending sultry allure with analog realism. The mood: *Pulp Fiction* meets *American Apparel*, raw yet editorial.\n\n      Street Style Product Ad:\n      Capture a cinematic eyewear portrait from a low angle as a model looks skyward, chin raised in defiance beneath thick, acid-toned sunglasses that wrap tightly across their face. Behind them, rooftops and textures fade into bokeh, contrasting with the glossy sharpness of the sculptural frames. Style with street-meets-sci-fi minimalism — raw skin, matte or sweaty, with clean-lined hair and expressive stillness. Let harsh midday or early golden light cast crisp shadows across the scene. Overlay the warped, melting GlassEye™ logo across the lens or subtly floating in space — a symbol of visual rebellion. Mood: confident, elusive, and hyper-modern.\n\n      Realistic Influencer Portrait:\n      Ultra-realistic fashion portrait of a real zoonan with natural beauty, light skin and soft Ancial features, minimal makeup, locking directly at the camera with a calm expression. She is wearing a clean white high-neck top. Her pose includes one or both arms raised above her head in a graceful editorial gesture. The image is cropped vertically from the chest up, centered composition. Studio lighting is soft and flattering, emphasizing real skin texture pores, natural tones, no airbrushing. Shot on a plain white background. The style of the image is elegant, minimalistic, and high-end like a Vogue magazine editorial.\n\n\n  N – Notation:\n    format: JSON\n    example_output: |\n        {\n          \"image_prompt\": \"string\",\n          \"video_prompt\": \"stringified JSON\",\n          \"caption\": \"short caption\",\n          \"creative_summary\": \"summary of the combined visual concept\",\n          \"aspect_ratio\": \"vertical or horizontal\",\n          \"video_model\": \"veo3 or veo3_fast\"\n        }\n\n\n  T – Tools:\n    You have access to the following tools. Each one is described clearly:\n    - Think Tool: Use this to reflect and reason before responding.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -32
+      ],
+      "id": "f6223790-3f75-4294-a080-24826fed2827",
+      "name": "Initial Prompt AI Agent1"
+    },
+    {
+      "parameters": {
+        "content": "# OUTPUT",
+        "height": 640,
+        "width": 180,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        784,
+        96
+      ],
+      "id": "3bba9479-baef-495d-a346-2a0db56d14c6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=787355734464713",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.data.response.resultUrls[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        816,
+        576
+      ],
+      "id": "930c9c54-8fc0-47f9-b42a-442eeb08d838",
+      "name": "Send message6",
+      "webhookId": "42945ee2-d4d9-4bda-8824-f8a54828ae0d",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "tTTxuCJw7GGc8b8L",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize GPT-Image polling\nconst item = $input.item;\n\nreturn [{\n  json: {\n    taskId: item.json.data.taskId,\n    attempt: 0,\n    maxAttempts: 20,  // 20 attempts × 25 seconds = 8.3 minutes max\n    status: 'pending',\n    pollType: 'gpt-image',\n    ...item.json\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -32
+      ],
+      "id": "1c2f8f69-829d-47a3-b4b9-cb4a8c2609e0",
+      "name": "Init GPT Polling"
+    },
+    {
+      "parameters": {
+        "amount": 25
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -32
+      ],
+      "id": "22255101-8af6-4a08-9943-a699d4b547a1",
+      "name": "Wait 25s (GPT)",
+      "webhookId": "gpt-polling-wait"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/gpt4o-image/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        192
+      ],
+      "id": "4fada5c3-8432-46c4-a35a-cb0aa709dae2",
+      "name": "Check GPT Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process GPT-Image status\nconst item = $input.item;\nconst attempt = $('Init GPT Polling').item.json.attempt || 0;\nconst maxAttempts = $('Init GPT Polling').item.json.maxAttempts || 20;\n\nconst status = item.json.data?.status || item.json.status || 'processing';\nconst isComplete = status === 'completed' || status === 'SUCCESS' || status === 'done';\nconst resultUrls = item.json.data?.response?.resultUrls || [];\n\nreturn [{\n  json: {\n    ...item.json,\n    taskId: $('Init GPT Polling').item.json.taskId,\n    attempt: attempt + 1,\n    maxAttempts: maxAttempts,\n    status: status,\n    isComplete: isComplete,\n    resultUrls: resultUrls,\n    shouldRetry: !isComplete && (attempt + 1) < maxAttempts,\n    pollType: 'gpt-image'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        192
+      ],
+      "id": "b8f46615-f097-447c-8ab5-81ca09972818",
+      "name": "Process GPT Status"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isComplete }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Complete"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.shouldRetry }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Retry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        352,
+        176
+      ],
+      "id": "5e7673df-3d13-4ed6-a88e-b8d3d28a2309",
+      "name": "Check GPT Complete"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize Veo polling\nconst item = $input.item;\n\nreturn [{\n  json: {\n    taskId: item.json.data.taskId,\n    attempt: 0,\n    maxAttempts: 24,  // 24 attempts × 25 seconds = 10 minutes max\n    status: 'pending',\n    pollType: 'veo',\n    ...item.json\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        384
+      ],
+      "id": "6da3c310-7046-448d-8cf3-c08f88ca60c4",
+      "name": "Init Veo Polling"
+    },
+    {
+      "parameters": {
+        "amount": 25
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        384
+      ],
+      "id": "83c316f3-f3d0-457a-88bd-43ccd6f98f8f",
+      "name": "Wait 25s (Veo)",
+      "webhookId": "veo-polling-wait"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/veo/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        624
+      ],
+      "id": "1e9a1b0d-875e-4b9f-8909-b499683a0c58",
+      "name": "Check Veo Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Veo status with actual KIE response structure\nconst item = $input.item;\nconst attempt = $('Init Veo Polling').item.json.attempt || 0;\nconst maxAttempts = $('Init Veo Polling').item.json.maxAttempts || 24;\n\n// Parse actual KIE API response structure\nconst responseCode = item.json.code || 0;\nconst responseMsg = item.json.msg || '';\nconst responseData = item.json.data || {};\nconst successFlag = responseData.successFlag || 0;\nconst errorCode = responseData.errorCode || null;\nconst errorMessage = responseData.errorMessage || null;\n\n// Determine completion status\nlet isComplete = false;\nlet isFatalError = false;\nlet shouldRetry = false;\nlet videoUrl = null;\nlet errorType = null;\n\nif (responseCode === 200 && successFlag === 1) {\n  // Success - video generated\n  isComplete = true;\n  videoUrl = responseData.response?.resultUrls?.[0] || null;\n} else if (responseCode === 200 && successFlag === 0) {\n  // Still processing - no error but not complete\n  shouldRetry = (attempt + 1) < maxAttempts;\n} else if (responseCode === 400) {\n  // Client error - content policy violation\n  isFatalError = true;\n  errorType = 'content_violation';\n} else if (responseCode === 422) {\n  // Fallback failed\n  isFatalError = true;\n  errorType = 'fallback_failed';\n} else if (responseCode === 501) {\n  // Generation failed\n  isFatalError = true;\n  errorType = 'generation_failed';\n} else if (responseCode === 500) {\n  // Server error - can retry\n  errorType = 'server_error';\n  shouldRetry = (attempt + 1) < maxAttempts;\n} else if (errorCode !== null) {\n  // Has error code - fatal\n  isFatalError = true;\n  errorType = 'api_error';\n} else {\n  // Still processing\n  shouldRetry = (attempt + 1) < maxAttempts;\n}\n\nreturn [{\n  json: {\n    ...item.json,\n    taskId: $('Init Veo Polling').item.json.taskId,\n    attempt: attempt + 1,\n    maxAttempts: maxAttempts,\n    responseCode: responseCode,\n    responseMsg: responseMsg,\n    successFlag: successFlag,\n    errorCode: errorCode,\n    errorMessage: errorMessage,\n    isComplete: isComplete,\n    isFatalError: isFatalError,\n    videoUrl: videoUrl,\n    shouldRetry: !isComplete && !isFatalError && shouldRetry,\n    errorType: errorType,\n    resolution: responseData.response?.resolution || null,\n    seeds: responseData.response?.seeds || null,\n    pollType: 'veo'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        624
+      ],
+      "id": "102691e1-ba07-4f1b-a5be-ad61387956bd",
+      "name": "Process Veo Status"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Video generation complete - using actual response structure\nconst item = $input.item;\n\nreturn [{\n  json: {\n    status: 'success',\n    videoUrl: item.json.videoUrl,\n    taskId: item.json.taskId,\n    attempts: item.json.attempt,\n    resolution: item.json.resolution,\n    seeds: item.json.seeds,\n    successFlag: item.json.successFlag,\n    message: '✅ Veo video generated successfully!'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        464
+      ],
+      "id": "72b59aa9-6717-4a82-8883-abe7d6665a97",
+      "name": "Format Veo Success"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Timeout - max attempts reached\nconst item = $input.item;\n\nreturn [{\n  json: {\n    status: 'timeout',\n    error: `⏱️ Video generation timed out after ${item.json.attempt} attempts (${Math.round(item.json.attempt * 25 / 60)} minutes)`,\n    lastResponseCode: item.json.responseCode,\n    lastResponseMsg: item.json.responseMsg,\n    taskId: item.json.taskId\n  }\n}];\n\n\n`\n## 📊 **Error Handling Flow:**\n\nCheck Veo Status\n    ↓\nProcess Veo Status → Analyzes response code\n    ↓\nCheck Veo Complete (Switch with 3 outputs):\n    ├─ Success (code 200) → Format Veo Success\n    ├─ Fatal Error (400, 422, 501) → Format Veo Fatal Error\n    ├─ Retry (500 or no code) → Wait 25s (Veo) → Loop back\n    └─ Timeout (max attempts) → Format Veo Timeout\n\n`"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        768
+      ],
+      "id": "065b320b-4beb-4890-a2f0-354ef1f63175",
+      "name": "Format Veo Timeout"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Image timeout\nconst item = $input.item;\n\nreturn [{\n  json: {\n    status: 'timeout',\n    error: 'Image generation timed out after ' + item.json.attempt + ' attempts (8.3 minutes)',\n    taskId: item.json.taskId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        224
+      ],
+      "id": "a8f26cd7-4bce-4d44-8508-2a9864b3aa53",
+      "name": "Format GPT Timeout"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"prompt\": {{ $('Set Prompts1').item.json.video_prompt }},\n  \"model\": \"{{ $('Set Prompts1').item.json.video_model }}\",\n  \"aspectRatio\": \"{{ $('Set Prompts1').item.json.aspect_ratio }}\",\n  \"imageUrls\": \"{{ $('Process GPT Status').item.json.resultUrls[0] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        384
+      ],
+      "id": "9938ea20-5906-4c6e-add1-b4ef98be02e4",
+      "name": "Create Veo1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/gpt4o-image/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filesUrl\": [\n    \"{{ $('When Executed by Another Workflow').item.json.image_url }}\"\n  ],\n  \"prompt\": \"Take the product in the image and place it in this scenario:  {{ $('Set Prompts1').item.json.image_prompt.replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"size\": \"3:2\",\n  \"nVariants\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        -32
+      ],
+      "id": "b58934b5-192a-465c-9c86-8fa1fb634c39",
+      "name": "Create GPT-Image2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.image_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -608,
+        -1360
+      ],
+      "id": "91770443-20e2-4770-b13e-cc29e3231906",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        -1680
+      ],
+      "id": "b6545bdd-ed59-419c-9832-6a55c539f949",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "cjdBp7RrV1Vi3OwY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"image_prompt\": \"string\",\n  \"video_prompt\": \"stringified JSON\",\n  \"caption\": \"short caption\",\n  \"creative_summary\": \"summary of the combined visual concept\",\n  \"aspect_ratio\": \"vertical or horizontal\",\n  \"video_model\": \"veo3 or veo3_fast\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -1680
+      ],
+      "id": "e6b56969-f944-4206-a337-7758ae64f0fc",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -1680
+      ],
+      "id": "aeed1873-e9ab-4054-99cb-070918e0ff10",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "amount": 300
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        -1312
+      ],
+      "id": "395a48ba-2bf6-4192-ae5e-245120d24ee9",
+      "name": "Wait",
+      "webhookId": "af082111-d00f-4289-8278-d4a0a96c8988"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "Describe the product and brand in this image in full detail. Fully ignore the background. Focus ONLY on the product.",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -592,
+        -1088
+      ],
+      "id": "ceb801a8-c0f1-4e20-bcba-526108484f10",
+      "name": "Analyze Image",
+      "credentials": {
+        "openAiApi": {
+          "id": "cjdBp7RrV1Vi3OwY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"prompt\": {{ $('Set Prompts').item.json.video_prompt }},\n  \"model\": \"{{ $('Set Prompts').item.json.video_model }}\",\n  \"aspectRatio\": \"{{ $('Set Prompts').item.json.aspect_ratio }}\",\n  \"imageUrls\": \"{{ $('Get GPT-Image').item.json.data.response.resultUrls[0] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        48,
+        -1120
+      ],
+      "id": "6f9067e9-b281-4042-b896-f7969604cabf",
+      "name": "Create Veo2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e46f416f-7609-455f-8795-72f52ba1e563",
+              "name": "image_prompt",
+              "value": "={{ $json.output.image_prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "6ae1e83d-d93f-497f-b1cb-23b71d219907",
+              "name": "video_prompt",
+              "value": "={{ $json.output.video_prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "0237134f-13d5-4c42-8ea0-2b8ec76be67d",
+              "name": "caption",
+              "value": "={{ $json.output.caption }}",
+              "type": "string"
+            },
+            {
+              "id": "4b03ccd0-8a8a-40b3-bbf6-ff4d3aa64dec",
+              "name": "creative_summary",
+              "value": "={{ $json.output.creative_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "87963f3e-497f-44e4-9d4b-02bf95cebe6a",
+              "name": "aspect_ratio",
+              "value": "={{ $json.output.aspect_ratio }}",
+              "type": "string"
+            },
+            {
+              "id": "6de93348-769a-47c5-88c2-471cd0807fbf",
+              "name": "video_model",
+              "value": "={{ $json.output.video_model }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        -1520
+      ],
+      "id": "8670f7ad-7d58-4453-929d-3805807105b3",
+      "name": "Set Prompts"
+    },
+    {
+      "parameters": {
+        "content": "# INPUT",
+        "height": 880,
+        "width": 260,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -1744
+      ],
+      "id": "0a5ab4cf-aadd-4cd9-814c-9dd862d92066",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the initial creative brief:\n\nDescription of the product:\n{{ $json.choices[0].message.content }}\n\nUse the Think tool to double check your output\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=system_prompt: |\n  ## 🎨 SYSTEM PROMPT: Image + Video Prompt Generator for Product Creatives\n\n  A – Ask:\n    Generate an image prompt and a video prompt (both stringified as JSON), plus a short caption and a structured creative summary, based on a product reference image and the user’s creative intent.\n\n  G – Guidance:\n    role: Seasoned creative director with deep expertise in visual storytelling, branding, and advertising\n    output_count: 1\n    character_limit: No hard limit, but each output should remain focused and readable\n\n    constraints: \n      - Prioritise dynamic backgrounds and elements, with scenes that are fully detailed out (unless otherwise specified by the user)\n      - Reference image must be mentioned and used for detailed visual context\n      - Preserve product label, color, and packaging fidelity\n      - Avoid vague, generic, or brand-inaccurate descriptions\n      - If the reference image contains background elements, ignore them unless essential—focus solely on the product as the visual centerpiece\n      - If the user’s brief lacks detail, creatively interpret their intent and propose a well-directed image and video concept. Be imaginative — act like a creative director, not a mirror.\n      - When the brief is vague, choose from one of the provided inspirational examples below and adapt its style, tone, and structure to fit the specific product and context.\n      - The video setting must align with the image setting \n\n      - \"image_prompt\" must be a string and include the following. Make sure to mention to Keep the product’s packaging, label, text, logo and all design details 100% sharp, clear and untouched. Make sure the background color matches or complements the dominant packaging color. Use realistic shadows and depth. :\n        - description\n        - setting\n        - background\n        - composition\n        - elements\n        - lighting\n        - camera_type\n        - camera_settings\n        - effects\n        - style\n\n      - \"video_prompt\" must be stringified JSON and include:\n        - description (scene must always start with the product already in frame)\n        - setting (describe a setting same as the image)\n        - camera_type (including camera settings)\n        - camera_movement (prioritise simple camera movement)\n        - action (what the product will do, if any)\n        - lighting\n        - other_details\n        - dialogue (optional, depending on user intent)\n        - music\n        - ending (optional)\n        - keywords (optional)\n\n      - \"creative_summary\" must begin with a short, non-technical paragraph summarizing where the video is, what's the style, and what will happen. Then use:\n\n        📢 One-paragraph overview of what will happen in the video\n\n        🖼️ IMAGE:\n        - just summarize the image prompt above but in bullet points\n\n        🎬 VIDEO:\n        - just summarize the video prompt above but in bullet points\n\n        📐 Aspect Ratio: 16:9 or 9:16  (default is 9:16)\n        🧠 Model: veo3 or veo3_fast (default is veo3_fast)\n\n      - \"caption\" must include at least one emoji and 1–2 relevant hashtags. Keep it punchy and optimized for social sharing.\n\n  E – Examples:\n    🟢 good_examples:\n\n      Eye-Catchy Product Video:\n      Capture a cinematic shot of a sunlit Scandinavian bedroom. A sealed IKEA box trembles, opens, and flat pack furniture assembles rapidly into a serene, styled room highlighted by a yellow IKEA throw on the bed. Elements include a fixed wide-angle camera, natural warm lighting with cool accents, and details such as the IKEA box (logo visible), bed with yellow throw, bedside tables, lamps, wardrobe, shelves, mirror, art, rug, curtains, reading chair, and plants. The motion features the box opening and furniture assembling precisely and rapidly. It ends in a calm, modern space with the signature yellow IKEA accent. Keywords include 16:9, IKEA, Scandinavian, fast assembly, no text, warm & cool tones. No text should appear on screen.\n\n      Product Photoshoot:\n      Create a hyper-realistic, high-energy product photo using my exact product from the reference image I provide. Keep the product’s packaging, label, text, logo and all design details 100% sharp, clear and untouched — do NOT blur or change any part of the label or text. Place the product in the center with an explosion of its natural flavor ingredients (for example: cereal balls, chocolate pieces, milk splashes, strawberries, or other matching ingredients). Make sure the background color matches or complements the dominant packaging color. Add dynamic lighting and a vivid splash effect to create energy, but keep the product label perfectly readable and in focus. Use realistic shadows and depth. The final image should feel delicious, fun and eye-catching, with every product detail fully visible and sharp.\n\n      Stylized Editorial Portrait:\n      Capture a cinematic 90s neo-noir portrait of a femme fatale lounging on a bed, legs bent upward and face half-shadowed beneath a sharp black bob. She wears a dark scoop-neck top, bold red lipstick, and holds a smoldering cigarette, its smoke curling into the moody atmosphere. Style the scene with faux 35mm film aesthetics — sepia-tinted shadows, faded blacks, light leaks, timestamp overlays, and soft grain. Use studio-grade top-down lighting mixed with ambient TV or lamp glow to emphasize glossy skin, smoke diffusion, and tactile surfaces like leather and paper. Contrast should be high but natural, blending sultry allure with analog realism. The mood: *Pulp Fiction* meets *American Apparel*, raw yet editorial.\n\n      Street Style Product Ad:\n      Capture a cinematic eyewear portrait from a low angle as a model looks skyward, chin raised in defiance beneath thick, acid-toned sunglasses that wrap tightly across their face. Behind them, rooftops and textures fade into bokeh, contrasting with the glossy sharpness of the sculptural frames. Style with street-meets-sci-fi minimalism — raw skin, matte or sweaty, with clean-lined hair and expressive stillness. Let harsh midday or early golden light cast crisp shadows across the scene. Overlay the warped, melting GlassEye™ logo across the lens or subtly floating in space — a symbol of visual rebellion. Mood: confident, elusive, and hyper-modern.\n\n      Realistic Influencer Portrait:\n      Ultra-realistic fashion portrait of a real zoonan with natural beauty, light skin and soft Ancial features, minimal makeup, locking directly at the camera with a calm expression. She is wearing a clean white high-neck top. Her pose includes one or both arms raised above her head in a graceful editorial gesture. The image is cropped vertically from the chest up, centered composition. Studio lighting is soft and flattering, emphasizing real skin texture pores, natural tones, no airbrushing. Shot on a plain white background. The style of the image is elegant, minimalistic, and high-end like a Vogue magazine editorial.\n\n\n  N – Notation:\n    format: JSON\n    example_output: |\n        {\n          \"image_prompt\": \"string\",\n          \"video_prompt\": \"stringified JSON\",\n          \"caption\": \"short caption\",\n          \"creative_summary\": \"summary of the combined visual concept\",\n          \"aspect_ratio\": \"vertical or horizontal\",\n          \"video_model\": \"veo3 or veo3_fast\"\n        }\n\n\n  T – Tools:\n    You have access to the following tools. Each one is described clearly:\n    - Think Tool: Use this to reflect and reason before responding.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -1520
+      ],
+      "id": "feddc36e-c91b-4184-b13e-0d10893dd2c2",
+      "name": "Initial Prompt AI Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the initial creative brief:\n\nHere are additional comments\n{{ $('Send template').item.json.data['Comments?'] }}\n\nDescription of the image provided to you. Make sure to focus on just the product:\n{{ $('Analyze Image').item.json.choices[0].message.content }}\n\nUse the Think tool to make sure the image_prompt and video_prompt are in stringified JSON format\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=system_prompt: |\n  ## 🎨 SYSTEM PROMPT: Image + Video Prompt Generator for Product Creatives\n\n  A – Ask:\n    Generate an image prompt and a video prompt (both stringified as JSON), plus a short caption and a structured creative summary, based on a product reference image and the user’s creative intent.\n\n  G – Guidance:\n    role: Seasoned creative director with deep expertise in visual storytelling, branding, and advertising\n    output_count: 1\n    character_limit: No hard limit, but each output should remain focused and readable\n    constraints: \n      - Reference image must be mentioned and used for detailed visual context\n      - Preserve product label, color, and packaging fidelity\n      - Avoid vague, generic, or brand-inaccurate descriptions\n      - If the reference image contains background elements, ignore them unless essential—focus solely on the product as the visual centerpiece\n      - If the user’s brief lacks detail, creatively interpret their intent and propose a well-directed image and video concept. Be imaginative — act like a creative director, not a mirror.\n      - The video setting must align with the image setting unless the user specifies otherwise.\n\n      - \"image_prompt\" must be stringified JSON and include:\n        - description\n        - setting\n        - background\n        - composition\n        - elements\n        - lighting\n        - camera_type\n        - camera_settings\n        - effects\n        - style\n\n      - \"video_prompt\" must be stringified JSON and include:\n        - description\n        - setting\n        - background\n        - camera_type\n        - camera_movement\n        - camera_settings\n        - action\n        - lighting\n        - other_details\n        - dialogue\n        - music\n        - style\n        - ending (optional)\n        - keywords (optional)\n        - aspect_ratio (default: 16:9)\n        - model (default: veo3_fast)\n\n      - \"creative_summary\" must begin with a short, non-technical paragraph summarizing where the video is, what's the style, and what will happen. Then use:\n\n        📢 One-paragraph overview\n\n        🖼️ IMAGE:\n        - Setting  \n        - Background  \n        - Composition  \n        - Elements  \n        - Lighting  \n        - Camera Type  \n        - Camera Settings  \n        - Effects  \n        - Style  \n\n        🎬 VIDEO:\n        - Setting  \n        - Background  \n        - Camera Type  \n        - Camera Movement  \n        - Camera Settings  \n        - Action  \n        - Lighting  \n        - Other Details  \n        - Dialogue  \n        - Music  \n        - Style  \n        - Ending (optional)  \n        - Keywords (optional)  \n\n        📐 Aspect Ratio: 16:9 or 9:16  \n        🧠 Model: veo3 or veo3_fast\n\n      - \"caption\" must include at least one emoji and 1–2 relevant hashtags. Keep it punchy and optimized for social sharing.\n\n  E – Examples:\n    🟢 good_examples:\n      {\n        \"image_prompt\": \"{\\\"description\\\":\\\"Crisp cereal pack with splash and freeze-frame milk burst.\\\",\\\"setting\\\":\\\"Studio\\\",\\\"background\\\":\\\"Gradient blue\\\",\\\"composition\\\":\\\"Centered, eye-level\\\",\\\"elements\\\":[\\\"cereal flakes\\\",\\\"splash arcs\\\"],\\\"lighting\\\":\\\"Top-down with soft bounce\\\",\\\"camera_type\\\":\\\"Canon EOS R5\\\",\\\"camera_settings\\\":\\\"f/4.0, 1/250s, ISO 320\\\",\\\"effects\\\":[\\\"milk splash\\\",\\\"floating particles\\\"],\\\"style\\\":\\\"Hyper-clean\\\"}\",\n        \"video_prompt\": \"{\\\"description\\\":\\\"Splashy cereal particles flying past the camera before revealing product.\\\",\\\"setting\\\":\\\"Studio\\\",\\\"background\\\":\\\"Gradient blue\\\",\\\"camera_type\\\":\\\"RED Komodo\\\",\\\"camera_movement\\\":\\\"dolly out\\\",\\\"camera_settings\\\":\\\"f/4.0, 1/60s, 24fps\\\",\\\"action\\\":\\\"Ingredients swirl and dissolve into logo\\\",\\\"lighting\\\":\\\"High contrast backlight\\\",\\\"other_details\\\":\\\"Light particle trails and lens flare\\\",\\\"dialogue\\\":\\\"No\\\",\\\"music\\\":\\\"Funky breakbeat\\\",\\\"style\\\":\\\"Energetic\\\",\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"model\\\":\\\"veo3_fast\\\"}\",\n        \"caption\": \"Start fresh, start fierce! 🥣✨ #CerealGoals #SplashShot\",\n        \"creative_summary\": \"📢 The product launches into frame as ingredients swirl dramatically around it, building energy before landing clean on the logo.\\n\\n🖼️ IMAGE:\\n- Setting: Studio\\n- Background: Gradient blue\\n- Composition: Product center, camera level\\n- Elements: Milk arcs, cereal flakes\\n- Lighting: Top-down with fill bounce\\n- Camera Type: Canon EOS R5\\n- Camera Settings: f/4.0, 1/250s, ISO 320\\n- Effects: Splash, flake particles\\n- Style: Hyper-clean\\n\\n🎬 VIDEO:\\n- Setting: Same blue studio\\n- Background: Swirl particle sim\\n- Camera Type: RED Komodo\\n- Camera Movement: Dolly out\\n- Camera Settings: f/4.0, 1/60s, 24fps\\n- Action: Particle burst, logo lock-on\\n- Lighting: Bright edge + back glow\\n- Other Details: Particles, overlay text\\n- Dialogue: No\\n- Music: Funky breakbeat\\n- Style: Energetic\\n- Aspect Ratio: 16:9\\n- Model: veo3_fast\"\n      }\n\n    🔴 bad_examples:\n      - \"Product on a table. Looks cool.\"\n      - \"Just shoot the pack and maybe add some text.\"\n\n  N – Notation:\n    format: JSON\n    example_output: |\n      {\n        \"image_prompt\": \"{\\\"description\\\":\\\"...\\\",\\\"setting\\\":\\\"...\\\",\\\"background\\\":\\\"...\\\",\\\"composition\\\":\\\"...\\\",\\\"elements\\\":[\\\"...\\\"],\\\"lighting\\\":\\\"...\\\",\\\"camera_type\\\":\\\"...\\\",\\\"camera_settings\\\":\\\"...\\\",\\\"effects\\\":[\\\"...\\\"],\\\"style\\\":\\\"...\\\"}\",\n        \"video_prompt\": \"{\\\"description\\\":\\\"...\\\",\\\"setting\\\":\\\"...\\\",\\\"background\\\":\\\"...\\\",\\\"camera_type\\\":\\\"...\\\",\\\"camera_movement\\\":\\\"...\\\",\\\"camera_settings\\\":\\\"...\\\",\\\"action\\\":\\\"...\\\",\\\"lighting\\\":\\\"...\\\",\\\"other_details\\\":\\\"...\\\",\\\"dialogue\\\":\\\"...\\\",\\\"music\\\":\\\"...\\\",\\\"style\\\":\\\"...\\\",\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"model\\\":\\\"veo3_fast\\\"}\",\n        \"caption\": \"Visual wow incoming 🚀 #FreshDrop #VisualVibes\",\n        \"creative_summary\": \"📢 [One-line overview]\\n\\n🖼️ IMAGE:\\n- ...\\n\\n🎬 VIDEO:\\n- ...\\n\\n📐 Aspect Ratio: ...\\n🧠 Model: ...\",\n        \"aspect_ratio\": \"vertical or horizontal\",\n        \"video_model\": \"veo3 or veo3_fast\"\n      }\n\n  T – Tools:\n    You have access to the following tools. Each one is described clearly:\n    - Think Tool: Use this to reflect and reason before responding.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -1520
+      ],
+      "id": "82661dd7-5810-4755-81a8-a0b1ae7507f7",
+      "name": "Revised Prompt AI Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/gpt4o-image/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filesUrl\": [\n    \"{{ $('When Executed by Another Workflow').item.json.image_url }}\"\n  ],\n  \"prompt\": \"Take the product in the image and place it in this scenario:  {{ $('Set Prompts').item.json.image_prompt.replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"size\": \"3:2\",\n  \"nVariants\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -112,
+        -1312
+      ],
+      "id": "55dc0588-2978-4758-b0ef-8a2161e21659",
+      "name": "Create GPT-Image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.kie.ai/api/v1/gpt4o-image/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.data.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        -1312
+      ],
+      "id": "873dfa03-4279-4247-9670-eb2b2d2be0a5",
+      "name": "Get GPT-Image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        -1120
+      ],
+      "id": "1ba65991-39f1-4d53-8f11-0e3929a8bf2c",
+      "name": "Wait 1",
+      "webhookId": "adfe449b-9612-47ba-b366-417da4485885"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.kie.ai/api/v1/veo/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $('Create Veo2').item.json.data.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        368,
+        -1120
+      ],
+      "id": "a0e4615c-32ac-4459-8589-199614937956",
+      "name": "Get Veo1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "418d8b43-2c8e-45a9-8055-dd77d2ff9b13",
+              "leftValue": "=Yes",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        -1520
+      ],
+      "id": "fdb946fe-c277-48ad-b4fc-52cb107428e9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "# OUTPUT",
+        "height": 640,
+        "width": 180,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        704,
+        -1568
+      ],
+      "id": "11316a62-2c04-48b7-8f79-6a90d5d991cf",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "message": "=approve? This prompt?\n{{ $json.video_prompt.toString() }}\n\nCaption:\n{{ $json.caption }}\n\nCreative Summary:\n{{ $json.creative_summary }}",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Approve",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Yes"
+                  },
+                  {
+                    "option": "No"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Comments?"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -1520
+      ],
+      "id": "e87a9019-6b04-4403-803a-f90343d6fcd4",
+      "name": "Send template",
+      "webhookId": "99f4c9cd-3402-4e94-b835-df60741c85c2",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "tTTxuCJw7GGc8b8L",
+          "name": "WhatsApp account 3"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=787355734464713",
+        "recipientPhoneNumber": "972539613663",
+        "textBody": "=This image will be used for video generation {{ $('Get GPT-Image').item.json.data.response.resultUrls[0] }} ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        368,
+        -1312
+      ],
+      "id": "632a917a-b41e-4bdd-ae94-f3988f3377b2",
+      "name": "Send message",
+      "webhookId": "e2815c6c-40a2-4baa-9e3a-cff93b9d3b36",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "tTTxuCJw7GGc8b8L",
+          "name": "WhatsApp account 3"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=787355734464713",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.data.response.resultUrls[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -1104
+      ],
+      "id": "df2ed674-3378-4270-8c66-d81fe37dec75",
+      "name": "Send message7",
+      "webhookId": "42945ee2-d4d9-4bda-8824-f8a54828ae0d",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "tTTxuCJw7GGc8b8L",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize GPT-Image polling\nconst item = $input.item;\n\nreturn [{\n  json: {\n    taskId: item.json.data.taskId,\n    attempt: 0,\n    maxAttempts: 20,  // 20 attempts × 25 seconds = 8.3 minutes max\n    status: 'pending',\n    pollType: 'gpt-image',\n    ...item.json\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -800
+      ],
+      "id": "f27a9f6a-55aa-4ef2-b0cc-973c2d65ad02",
+      "name": "Init GPT Polling1"
+    },
+    {
+      "parameters": {
+        "amount": 25
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        -800
+      ],
+      "id": "eab135b2-5096-416f-9e44-5137d44f1486",
+      "name": "Wait 25s (GPT)1",
+      "webhookId": "gpt-polling-wait"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/gpt4o-image/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        -800
+      ],
+      "id": "3f18e746-f9f1-4623-81b9-998ddcad1e89",
+      "name": "Check GPT Status1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process GPT-Image status\nconst item = $input.item;\nconst attempt = $('Init GPT Polling1').item.json.attempt || 0;\nconst maxAttempts = $('Init GPT Polling1').item.json.maxAttempts || 20;\n\nconst status = item.json.data?.status || item.json.status || 'processing';\nconst isComplete = status === 'completed' || status === 'SUCCESS' || status === 'done';\nconst resultUrls = item.json.data?.response?.resultUrls || [];\n\nreturn [{\n  json: {\n    ...item.json,\n    taskId: $('Init GPT Polling1').item.json.taskId,\n    attempt: attempt + 1,\n    maxAttempts: maxAttempts,\n    status: status,\n    isComplete: isComplete,\n    resultUrls: resultUrls,\n    shouldRetry: !isComplete && (attempt + 1) < maxAttempts,\n    pollType: 'gpt-image'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -800
+      ],
+      "id": "c3aa3fda-3896-492c-bb2a-7619e9d8bf1c",
+      "name": "Process GPT Status1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isComplete }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Complete"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.shouldRetry }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Retry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        752,
+        -800
+      ],
+      "id": "bb79aafa-79b3-4910-8e44-621516d5bf06",
+      "name": "Check GPT Complete1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize Veo polling\nconst item = $input.item;\n\nreturn [{\n  json: {\n    taskId: item.json.data.taskId,\n    attempt: 0,\n    maxAttempts: 24,  // 24 attempts × 25 seconds = 10 minutes max\n    status: 'pending',\n    pollType: 'veo',\n    ...item.json\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -416
+      ],
+      "id": "ea359504-28c0-4501-adcb-d71c30120f45",
+      "name": "Init Veo Polling1"
+    },
+    {
+      "parameters": {
+        "amount": 25
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        -416
+      ],
+      "id": "f76e76f8-5d6e-40d4-b4a2-e656cf9e60f3",
+      "name": "Wait 25s (Veo)1",
+      "webhookId": "veo-polling-wait"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/veo/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        -416
+      ],
+      "id": "457c5d98-10fc-4264-9dda-03ca1451e5d2",
+      "name": "Check Veo Status1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Veo status\nconst item = $input.item;\nconst attempt = $('Init Veo Polling1').item.json.attempt || 0;\nconst maxAttempts = $('Init Veo Polling1').item.json.maxAttempts || 24;\n\nconst status = item.json.data?.status || item.json.status || 'processing';\nconst isComplete = status === 'completed' || status === 'SUCCESS' || status === 'done' || $input.first().json.data.successFlag === 1;\nconst videoUrl = item.json.data?.response?.resultUrls?.[0] || item.json.data?.videoUrl || null;\n\nreturn [{\n  json: {\n    ...item.json,\n    taskId: $('Init Veo Polling1').item.json.taskId,\n    attempt: attempt + 1,\n    maxAttempts: maxAttempts,\n    status: status,\n    isComplete: isComplete,\n    videoUrl: videoUrl,\n    shouldRetry: !isComplete && (attempt + 1) < maxAttempts,\n    pollType: 'veo'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        -416
+      ],
+      "id": "c6b16f20-0620-45d4-8282-e52cc071dae8",
+      "name": "Process Veo Status1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isComplete }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Complete"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.shouldRetry }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Retry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        848,
+        -416
+      ],
+      "id": "8d10d114-0048-486b-a296-acd6f26d865a",
+      "name": "Check Veo Complete1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Video generation complete\nconst item = $input.item;\n\nreturn [{\n  json: {\n    status: 'success',\n    videoUrl: item.json.videoUrl,\n    taskId: item.json.taskId,\n    attempts: item.json.attempt,\n    message: '✅ Video ready!'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        -512
+      ],
+      "id": "071338ec-b847-4301-9ebb-610368f4b37f",
+      "name": "Format Veo Success1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Video timeout\nconst item = $input.item;\n\nreturn [{\n  json: {\n    status: 'timeout',\n    error: 'Video generation timed out after ' + item.json.attempt + ' attempts (10 minutes)',\n    taskId: item.json.taskId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        -320
+      ],
+      "id": "509d3255-77a0-4680-a811-c582306154a1",
+      "name": "Format Veo Timeout1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Image timeout\nconst item = $input.item;\n\nreturn [{\n  json: {\n    status: 'timeout',\n    error: 'Image generation timed out after ' + item.json.attempt + ' attempts (8.3 minutes)',\n    taskId: item.json.taskId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        -672
+      ],
+      "id": "bbf1c906-c512-47c1-8a75-1ac9c2d5bdd0",
+      "name": "Format GPT Timeout1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"prompt\": {{ $('Set Prompts').item.json.video_prompt }},\n  \"model\": \"{{ $('Set Prompts').item.json.video_model }}\",\n  \"aspectRatio\": \"{{ $('Set Prompts').item.json.aspect_ratio }}\",\n  \"imageUrls\": \"{{ $('Process GPT Status1').item.json.resultUrls[0] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        -416
+      ],
+      "id": "c03d83c5-1a74-48b6-bbca-93dad18ff15a",
+      "name": "Create Veo3",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/gpt4o-image/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filesUrl\": [\n    \"{{ $('When Executed by Another Workflow').item.json.image_url }}\"\n  ],\n  \"prompt\": \"Take the product in the image and place it in this scenario:  {{ $('Set Prompts').item.json.image_prompt.replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"size\": \"3:2\",\n  \"nVariants\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        16,
+        -800
+      ],
+      "id": "9164005a-d254-42e7-af03-862102837862",
+      "name": "Create GPT-Image3",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JvTZ4437ZYAsjEeI",
+          "name": "KIE Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fatal error - using actual error structure\nconst item = $input.item;\n\nconst errorMessages = {\n  'content_violation': '❌ Content Policy Violation: Your prompt or image was flagged.',\n  'fallback_failed': '❌ Generation Failed: Request was rejected.',\n  'generation_failed': '❌ Generation Failed: Video generation task failed.',\n  'api_error': '❌ API Error: ' + (item.json.errorMessage || 'Unknown error'),\n  'unknown_error': '❌ Unknown Error: An unexpected error occurred.'\n};\n\nconst userMessage = errorMessages[item.json.errorType] || errorMessages['unknown_error'];\n\nreturn [{\n  json: {\n    status: 'fatal_error',\n    error: userMessage,\n    errorType: item.json.errorType,\n    errorCode: item.json.errorCode || item.json.responseCode,\n    errorMessage: item.json.errorMessage || item.json.responseMsg,\n    taskId: item.json.taskId,\n    attempts: item.json.attempt\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        608
+      ],
+      "id": "e396d638-c15a-4be4-9327-194d2d68efdf",
+      "name": "Format Veo Fatal Error"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "success-condition",
+                    "leftValue": "={{$json.isComplete}}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Success"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fatal-error-condition",
+                    "leftValue": "={{$json.isFatalError}}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Fatal Error"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "retry-condition",
+                    "leftValue": "={{$json.shouldRetry}}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Retry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "6d0bf113-e015-4f1a-b02f-ade1071d758a",
+      "name": "Check Veo Complete2",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        352,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isComplete }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Complete"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.shouldRetry }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Retry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -384,
+        1200
+      ],
+      "id": "49f917e1-f90a-468b-a4f1-3ff4efdac44d",
+      "name": "Check Veo Complete3"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "image_url": "https://getadly.com/uploads/products/product_1760627155_68f109d3d1a39.jpg",
+          "client_id": "9"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image1": {
+      "main": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Prompts1": {
+      "main": [
+        [
+          {
+            "node": "Create GPT-Image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initial Prompt AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Set Prompts1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init GPT Polling": {
+      "main": [
+        [
+          {
+            "node": "Wait 25s (GPT)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 25s (GPT)": {
+      "main": [
+        [
+          {
+            "node": "Check GPT Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GPT Status": {
+      "main": [
+        [
+          {
+            "node": "Process GPT Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process GPT Status": {
+      "main": [
+        [
+          {
+            "node": "Check GPT Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GPT Complete": {
+      "main": [
+        [
+          {
+            "node": "Create Veo1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 25s (GPT)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format GPT Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Veo Polling": {
+      "main": [
+        [
+          {
+            "node": "Wait 25s (Veo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 25s (Veo)": {
+      "main": [
+        [
+          {
+            "node": "Check Veo Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Veo Status": {
+      "main": [
+        [
+          {
+            "node": "Process Veo Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Veo Status": {
+      "main": [
+        [
+          {
+            "node": "Check Veo Complete2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Veo1": {
+      "main": [
+        [
+          {
+            "node": "Init Veo Polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create GPT-Image2": {
+      "main": [
+        [
+          {
+            "node": "Init GPT Polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Initial Prompt AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Revised Prompt AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Initial Prompt AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          },
+          {
+            "node": "Revised Prompt AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "Initial Prompt AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Revised Prompt AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get GPT-Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "Initial Prompt AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Veo2": {
+      "main": [
+        [
+          {
+            "node": "Wait 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Prompts": {
+      "main": [
+        [
+          {
+            "node": "Send template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initial Prompt AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Set Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revised Prompt AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Set Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create GPT-Image": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get GPT-Image": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1": {
+      "main": [
+        [
+          {
+            "node": "Get Veo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Veo1": {
+      "main": [
+        [
+          {
+            "node": "Send message7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create GPT-Image3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Revised Prompt AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send template": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Create Veo2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init GPT Polling1": {
+      "main": [
+        [
+          {
+            "node": "Wait 25s (GPT)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 25s (GPT)1": {
+      "main": [
+        [
+          {
+            "node": "Check GPT Status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GPT Status1": {
+      "main": [
+        [
+          {
+            "node": "Process GPT Status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process GPT Status1": {
+      "main": [
+        [
+          {
+            "node": "Check GPT Complete1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GPT Complete1": {
+      "main": [
+        [
+          {
+            "node": "Create Veo3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 25s (GPT)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format GPT Timeout1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Veo Polling1": {
+      "main": [
+        [
+          {
+            "node": "Wait 25s (Veo)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 25s (Veo)1": {
+      "main": [
+        [
+          {
+            "node": "Check Veo Status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Veo Status1": {
+      "main": [
+        [
+          {
+            "node": "Process Veo Status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Veo Status1": {
+      "main": [
+        [
+          {
+            "node": "Check Veo Complete1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Veo Complete1": {
+      "main": [
+        [
+          {
+            "node": "Format Veo Success1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 25s (Veo)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Veo Timeout1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Veo3": {
+      "main": [
+        [
+          {
+            "node": "Init Veo Polling1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create GPT-Image3": {
+      "main": [
+        [
+          {
+            "node": "Init GPT Polling1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Veo Complete2": {
+      "main": [
+        [
+          {
+            "node": "Format Veo Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Veo Fatal Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 25s (Veo)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Veo Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8c7e15ce-cb3f-4551-bcb1-b6b05d910436",
+  "meta": {
+    "instanceId": "a7e367d5b049923fc2fe57ced60d0eee5246d33d838232f14626f381ac5f0963"
+  },
+  "id": "ZG02uAb8HSdjZCky",
+  "tags": []
+}

@@ -1,0 +1,21 @@
+# Secrets
+config.php
+.env
+.env.*
+
+# Runtime / user uploads (adjust if you need to keep them)
+uploads/
+storage/
+storage/sessions/
+webhook_debug.txt
+error_log
+_docs/
+.htaccess
+
+# OS junk
+.DS_Store
+__MACOSX/
+
+# If you add composer/node later
+vendor/
+node_modules/

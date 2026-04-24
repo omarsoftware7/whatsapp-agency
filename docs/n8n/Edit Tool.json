@@ -1,0 +1,1449 @@
+{
+  "name": "Edit Tool",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userPrompt"
+            },
+            {
+              "name": "imageUrl"
+            },
+            {
+              "name": "clientId"
+            },
+            {
+              "name": "jobId"
+            }
+          ]
+        }
+      },
+      "id": "51bb67cf-8841-4fc9-a964-112aac1ced5c",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -672,
+        2688
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        288,
+        544
+      ],
+      "id": "972a2244-e425-40b7-9020-97497e491cb2",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6GoV05tLI5Eq5AID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "={\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The fully revised, single-string, detailed image generation prompt, incorporating the user's latest editing request.\"\n    }\n  },\n  \"required\": [\n    \"prompt\"\n  ],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        544
+      ],
+      "id": "7a36f48d-bc63-4f70-87d9-f47fd7745c97",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        496,
+        752
+      ],
+      "id": "e0ce19ee-86df-4025-9386-aff599731468",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6GoV05tLI5Eq5AID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.output.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "OriginalImage"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        128
+      ],
+      "id": "2171aefc-d5e1-4786-9cfc-6793023abc42",
+      "name": "Generate An Image With Logo",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6GoV05tLI5Eq5AID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        992,
+        128
+      ],
+      "id": "bca4d053-4226-4a85-b40b-2160e0f54452",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.imageUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -80
+      ],
+      "id": "50a066e3-5776-4110-af6d-403c73f4c2bb",
+      "name": "Download Image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kBh38rjfuKdFJD0S",
+          "name": "Whatsapp Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "787355734464713",
+        "mediaPropertyName": "edited",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        128
+      ],
+      "id": "80370895-5aae-4f98-8c5e-a5d4ed776924",
+      "name": "Upload media",
+      "webhookId": "8e8630e2-1c4e-4a69-8506-47a697b94352",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code takes the file named 'data' in the binary area \n// and renames it to 'OriginalImage' in the binary area.\n\n// 1. Get the current item\nconst item = $input.item;\n\n// 2. Check if the binary property 'data' exists (which it should from Download Image)\nif (item.binary && item.binary.data) {\n    // 3. Create a new binary property named 'OriginalImage' \n    //    and set its value to the data from the 'data' property.\n    item.binary.OriginalImage = item.binary.data;\n\n    // 4. Optionally, remove the old 'data' property to clean up\n    delete item.binary.data;\n}\n\n// 5. Also, ensure the JSON has a OriginalImage property that points to the metadata\n//    (The metadata object is stored in the binary area itself)\nif (item.binary.OriginalImage) {\n    item.json.OriginalImage = item.binary.OriginalImage;\n}\n\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -80
+      ],
+      "id": "2c202936-3a7a-4ca3-aac4-5220966b247c",
+      "name": "Convert To Binary Image"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.userPrompt }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are 'AdlyEditor', an expert image prompt refinement specialist. Your sole and highly constrained function is to edit an existing, structured image generation prompt based on a user's short, descriptive editing request.\n\n**1. Your Goal:**\nTo receive an existing image generation prompt (userPrompt) and a short editing instruction from the user. You must then output the SINGLE revised prompt string that integrates the user's requested changes.\n\n**2. Tool Parameters You Will Receive:**\nYou receive these two mandatory parameters from the main AI Agent:\n* **userPrompt (string):** The full, current image generation prompt that needs editing.\n* **imageUrl (string):** The url of the image currently being reviewed. This url is provided for context only; you MUST NOT use it in your output.\n\n**3. Your Output (Strict Requirement):**\nYour final and ONLY output must be a single JSON object containing the revised prompt string.\n\n* **Output Parameter:** \"prompt\" (string)\n* **Output Format (Example):**\n  ```json\n  {\n    \"prompt\": \"Your revised prompt goes here, ensuring ensuring the changes requested by the user.\"\n  }"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "2d5d0ab4-3aa0-4c64-9712-92d410363083",
+      "name": "Generate prompt",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        320,
+        320
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1376
+      ],
+      "id": "02eb9184-31af-4386-a485-8edec889f3a6",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6GoV05tLI5Eq5AID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "={\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The fully revised, single-string, detailed image generation prompt, incorporating the user's latest editing request.\"\n    }\n  },\n  \"required\": [\n    \"prompt\"\n  ],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        1376
+      ],
+      "id": "2ac6ce83-1179-4aeb-90b3-4b223da02d8b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        208,
+        1584
+      ],
+      "id": "f5c07d3b-a65e-489d-97fd-4550ab86b277",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6GoV05tLI5Eq5AID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.output.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "OriginalImage"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        928,
+        960
+      ],
+      "id": "3ad747e1-0d55-4b4f-8c61-3b11944b182f",
+      "name": "Generate An Image With Logo1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6GoV05tLI5Eq5AID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        960
+      ],
+      "id": "a434846d-9fd7-4c7f-8b04-1d9f16900e5e",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.ImageId }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        752
+      ],
+      "id": "7c1e7142-8408-4ffc-8d0a-dab7e1e685a1",
+      "name": "Download media1",
+      "webhookId": "fce822dd-ae58-441e-a315-dd2de3e1b64a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        752
+      ],
+      "id": "140f57aa-3b20-4112-921c-34355159a783",
+      "name": "Download Image1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kBh38rjfuKdFJD0S",
+          "name": "Whatsapp Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "787355734464713",
+        "mediaPropertyName": "edited",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        960
+      ],
+      "id": "ebf5bc99-21d9-4830-b0ec-bda43c2dbbab",
+      "name": "Upload media1",
+      "webhookId": "8e8630e2-1c4e-4a69-8506-47a697b94352",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code takes the file named 'data' in the binary area \n// and renames it to 'OriginalImage' in the binary area.\n\n// 1. Get the current item\nconst item = $input.item;\n\n// 2. Check if the binary property 'data' exists (which it should from Download Image)\nif (item.binary && item.binary.data) {\n    // 3. Create a new binary property named 'OriginalImage' \n    //    and set its value to the data from the 'data' property.\n    item.binary.OriginalImage = item.binary.data;\n\n    // 4. Optionally, remove the old 'data' property to clean up\n    delete item.binary.data;\n}\n\n// 5. Also, ensure the JSON has a OriginalImage property that points to the metadata\n//    (The metadata object is stored in the binary area itself)\nif (item.binary.OriginalImage) {\n    item.json.OriginalImage = item.binary.OriginalImage;\n}\n\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        752
+      ],
+      "id": "6f134f99-0186-4e26-bfed-96444d8c21c7",
+      "name": "Convert To Binary Image1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.UserPrompt }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are 'AdlyEditor', an expert image prompt refinement specialist. Your sole and highly constrained function is to edit an existing, structured image generation prompt based on a user's short, descriptive editing request.\n\n**1. Your Goal:**\nTo receive an existing image generation prompt (UserPrompt) and a new, short editing instruction from the user. You must then output the SINGLE revised prompt string that integrates the user's requested changes.\n\n**2. Tool Parameters You Will Receive:**\nYou receive these two mandatory parameters from the main AI Agent:\n* **UserPrompt (string):** The full, current image generation prompt that needs editing. This prompt is structured, highly detailed, and designed for a generative AI model (like Google Gemini).\n* **ImageId (string):** The ID of the image currently being reviewed. This ID is provided for context only; you MUST NOT use it in your output.\n\n**3. Your Output (Strict Requirement):**\nYour final and ONLY output must be a single JSON object containing the revised prompt string.\n\n* **Output Parameter:** \"prompt\" (string)\n* **Output Format (Example):**\n  ```json\n  {\n    \"prompt\": \"Your fully revised, single-string, detailed image generation prompt goes here, ensuring all original details are maintained except for the specific changes requested by the user.\"\n  }"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "1dafb621-e807-42fe-8130-f3caa5b055d0",
+      "name": "Generate prompt1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        32,
+        1152
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.imageUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1472,
+        1760
+      ],
+      "id": "8bc9ec8f-5a2c-4e16-bf7d-44ba5eccd673",
+      "name": "Download Image2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kBh38rjfuKdFJD0S",
+          "name": "Whatsapp Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "787355734464713",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        -1264,
+        1760
+      ],
+      "id": "98a56acb-e474-4603-9973-88f765fdf34c",
+      "name": "Upload media2",
+      "webhookId": "8e8630e2-1c4e-4a69-8506-47a697b94352",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        1856
+      ],
+      "id": "a122f9d4-f77e-478f-85c2-ed1c6f2545cd",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "cjdBp7RrV1Vi3OwY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        1840
+      ],
+      "id": "eb7b4789-7ffd-4261-8916-3dcac555a312",
+      "name": "Think1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e46f416f-7609-455f-8795-72f52ba1e563",
+              "name": "image_prompt",
+              "value": "={{ $json.output.image_prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "0237134f-13d5-4c42-8ea0-2b8ec76be67d",
+              "name": "caption",
+              "value": "={{ $json.output.caption }}",
+              "type": "string"
+            },
+            {
+              "id": "4b03ccd0-8a8a-40b3-bbf6-ff4d3aa64dec",
+              "name": "creative_summary",
+              "value": "={{ $json.output.creative_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "87963f3e-497f-44e4-9d4b-02bf95cebe6a",
+              "name": "aspect_ratio",
+              "value": "={{ $json.output.aspect_ratio }}",
+              "type": "string"
+            },
+            {
+              "id": "6de93348-769a-47c5-88c2-471cd0807fbf",
+              "name": "video_model",
+              "value": "={{ $json.output.video_model }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        1984
+      ],
+      "id": "8ac2a117-6166-4eeb-9f42-b1eb25ade540",
+      "name": "Set Prompts1"
+    },
+    {
+      "parameters": {
+        "content": "# INPUT",
+        "height": 880,
+        "width": 260,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        1632
+      ],
+      "id": "ad8ace07-97f4-4180-b539-5dcb615f4c28",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the initial creative brief:\n{{ JSON.stringify($('When Executed by Another Workflow').item.json.user_text) }}\nHere is the Business info:\n{{ $json.prompt }}\n\nDescription of the product/business logo:\n{{ $('Analyze Image').item.json.choices[0].message.content }}\n\nFor a product image:\nUse the Think tool to double check your output. Make sure the model understand this is a template to be generated with all inferred info, and then we place the prodcut in the center. Inferred info cannot cover, be a part of, on top of, or behind the product. \n\nFor a logo image:\nUse the Think tool to double check your output. Make sure the model understand this is a template to be generated with all inferred info, make sure the user request is fulfilled. \nThen Deside where is the optimal place for the logo.\n\nRules:\n\nThe given images (product image or logo) should never be altered.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=system_prompt: |\n  ## 🎨 SYSTEM PROMPT: Image ad template Prompt Generator for Product Creatives\n\n  A – Ask:\n    Generate an image ad template prompt (stringified as JSON), plus a short caption and a structured creative summary, based on a product reference image and the user’s creative intent.\n\n  G – Guidance:\n    role: Seasoned creative director with deep expertise in visual storytelling, branding, and advertising\n    output_count: 1\n    character_limit: No hard limit, but each output should remain focused and readable\n   \n\n    constraints: \n      - Prioritise dynamic backgrounds and elements, with scenes that are fully detailed out (unless otherwise specified by the user)\n      - Reference image must be mentioned and used for detailed visual context\n      - Preserve product label, color, and packaging fidelity\n      - Perserve logo (if provided) fidelity and make no changes to it whatsoever.\n      - Avoid vague, generic, or brand-inaccurate descriptions\n      - If the reference image contains background elements, ignore them unless essential—focus solely on the product as the visual centerpiece\n      - If the user’s brief lacks detail, creatively interpret their intent and propose a well-directed image and video concept. Be imaginative — act like a creative director, not a mirror.\n      - When the brief is vague, choose from one of the provided inspirational examples below and adapt its style, tone, and structure to fit the specific product and context.\n      - The image setting must align with the image setting \n      - Infer from the creative brief all details such as address, website url, sale terms, phone numbers, contact details, prices, old prices, or other marketing or contact info and add them to the imgage prompt, to be inserted where suitable but not on the produt or behind it bur rather in the best position in the template. All inferred details must be included. Only add to the image prompt elements that have no arabic characters. Any inferred detail that has arabic characters is to be ignored.\n      - Any inferred element is to be placed not on the product. Nothing can be printed or put on top of the product.\n      - Inferred info must be professionally formatted and made to sell. Prices in price stickers matching the design. Address and contact elements the same on top of good elements that are good for social medial. If the user gives before and after price extract them without the words, price only. \n      - ALL inferred element MUST be included\n      - If the product features a lot of arabic text on packaging, make it 50% smaller than what you would have without this instrcution\n\n      - \"image_prompt\" must be a string and include the following. Make sure to mention to Keep the product’s packaging, label, text, logo and all design details 100% sharp, clear and untouched. Make sure the background color matches or complements the dominant packaging color. Use realistic shadows and depth. :\n        - description\n        - inferred elements\n        - setting\n        - background\n        - composition\n        - elements\n        - lighting\n        - camera_type\n        - camera_settings\n        - effects\n        - style\n\n    \n\n      - \"creative_summary\" must begin with a short, non-technical paragraph summarizing where the image is, what's the style. Then use:\n\n      \n        🖼️ IMAGE:\n        - just summarize the image prompt above but in bullet points\n\n\n      - \"caption\" must include at least one emoji and 1–2 relevant hashtags. Keep it punchy and optimized for social sharing.\n\n  E – Examples:\n    🟢 good_examples:\n\n      Eye-Catchy Product Video:\n      Capture a cinematic shot of a sunlit Scandinavian bedroom. A sealed IKEA box trembles, opens, and flat pack furniture assembles rapidly into a serene, styled room highlighted by a yellow IKEA throw on the bed. Elements include a fixed wide-angle camera, natural warm lighting with cool accents, and details such as the IKEA box (logo visible), bed with yellow throw, bedside tables, lamps, wardrobe, shelves, mirror, art, rug, curtains, reading chair, and plants. The motion features the box opening and furniture assembling precisely and rapidly. It ends in a calm, modern space with the signature yellow IKEA accent. Keywords include 16:9, IKEA, Scandinavian, fast assembly, no text, warm & cool tones. No text should appear on screen.\n\n      Product Photoshoot:\n      Create a hyper-realistic, high-energy product photo using my exact product from the reference image I provide. Keep the product’s packaging, label, text, logo and all design details 100% sharp, clear and untouched — do NOT blur or change any part of the label or text. Place the product in the center with an explosion of its natural flavor ingredients (for example: cereal balls, chocolate pieces, milk splashes, strawberries, or other matching ingredients). Make sure the background color matches or complements the dominant packaging color. Add dynamic lighting and a vivid splash effect to create energy, but keep the product label perfectly readable and in focus. Use realistic shadows and depth. The final image should feel delicious, fun and eye-catching, with every product detail fully visible and sharp. On the bototm left add the provided price (250 ILS) and on the bottom right add the contact details: Phone icon followed by 05454515506\n\n    \n\n      Street Style Product Ad:\n      Capture a cinematic eyewear portrait from a low angle as a model looks skyward, chin raised in defiance beneath thick, acid-toned sunglasses that wrap tightly across their face. Behind them, rooftops and textures fade into bokeh, contrasting with the glossy sharpness of the sculptural frames. Style with street-meets-sci-fi minimalism — raw skin, matte or sweaty, with clean-lined hair and expressive stillness. Let harsh midday or early golden light cast crisp shadows across the scene. Overlay the warped, melting GlassEye™ logo across the lens or subtly floating in space — a symbol of visual rebellion. Mood: confident, elusive, and hyper-modern.\n\n     \n\n\n  N – Notation:\n    format: JSON\n    example_output: |\n        {\n          \"image_prompt\": \"string\",\n          \"caption\": \"short caption\",\n          \"creative_summary\": \"summary of the combined visual concept\",\n        }\n\n\n  T – Tools:\n    You have access to the following tools. Each one is described clearly:\n    - Think Tool: Use this to reflect and reason before responding.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        1984
+      ],
+      "id": "46ee4834-a9d2-4b29-b907-0bea6dfb0000",
+      "name": "Initial Prompt AI Agent1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"image_prompt\": \"string\",\n  \"video_prompt\": \"stringified JSON\",\n  \"caption\": \"short caption\",\n  \"creative_summary\": \"summary of the combined visual concept\",\n  \"aspect_ratio\": \"vertical or horizontal\",\n  \"video_model\": \"veo3 or veo3_fast\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -64,
+        1856
+      ],
+      "id": "9cfcf249-e20e-4c53-afd7-4e71c712cd58",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Get Client Info').item.json.brand_assets.logo_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        1872
+      ],
+      "id": "cf14c479-55a0-4408-a8f9-61d8b87be51a",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read client info from the other node\nconst clientInfo = $('Get Client Info').first().json || {};\n\n// Extract context with safe defaults\nconst businessName   = clientInfo.business_info?.business_name ?? '';\nconst businessAddress   = clientInfo.business_info?.business_address ?? '';\nconst businessPhone  = clientInfo.client.phone_number ?? '';\nconst industry       = clientInfo.business_info?.industry ?? 'general';\nconst brandTone      = clientInfo.business_info?.brand_tone ?? 'professional';\nconst primaryColor   = clientInfo.brand_assets?.primary_color ?? '#000000';\nconst secondaryColor = clientInfo.brand_assets?.secondary_color ?? '#FFFFFF';\n\n// Build the prompt\nconst designPrompt = `\nBusiness Name: ${businessName}\nBusiness Address: ${businessAddress}\nPhone: ${businessPhone}\nIndustry: ${industry}\nBrand Tone: ${brandTone}\nBrand Colors: Primary ${primaryColor}, Secondary ${secondaryColor}\n`.trim();\n\n// Return a single item\nreturn {\n  json: {\n    prompt: designPrompt,\n  }\n};\n"
+      },
+      "id": "b68114ae-0661-4cc1-9fab-cf381ecf0211",
+      "name": "Prepare Product Design Prompt2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        2208
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "=965331439993382",
+        "mediaPropertyName": "image",
+        "additionalFields": {}
+      },
+      "id": "15aafaef-9c06-4baa-9e8b-05c04483f357",
+      "name": "Upload to WhatsApp8",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        688,
+        2256
+      ],
+      "webhookId": "generate-design-upload",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "Describe the product and brand in this image in full detail. Fully ignore the background. Focus ONLY on the product. \nif the Image is the business logo describe it.",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -688,
+        2336
+      ],
+      "id": "f024fd0d-a5b0-4cc5-ad32-ee4f8fa966af",
+      "name": "Analyze Image",
+      "credentials": {
+        "openAiApi": {
+          "id": "cjdBp7RrV1Vi3OwY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('When Executed by Another Workflow').item.json?.imageUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -656,
+        3136
+      ],
+      "id": "94e28e2c-1550-4275-b052-a1cda214835f",
+      "name": "HTTP Request",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://getadly.com/api/get_client_info_by_id.php",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.clientId }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "5bad1979-8747-4ddf-b33b-35e6130f3b83",
+      "name": "Get Client Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        2688
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YCgJKAnpFInsQ5y4",
+          "name": "Adly Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "logo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        1872
+      ],
+      "id": "da2b2f2f-84a7-4b79-b0f2-8e58e5b8d905",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('When Executed by Another Workflow').item.json.productImage }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        1680
+      ],
+      "id": "7e5498fe-05bf-4b47-9618-bc6d82e4d90b",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "product",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        1680
+      ],
+      "id": "55d62aa9-bc33-4741-983b-f59191d31774",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4d9a189a-9d53-49e2-93f1-54f983968602",
+              "name": "final_prompt",
+              "value": "=\"Take the product in the first image and place it in this scenario: {{ JSON.stringify($('Set Prompts1').item.json.image_prompt.replace(/\\r?\\n/g,'\\\\n')).replace(/^\\\"|\\\"$/g,'') }}.\nthen Place the second image [logo] where suitable.\nYou should Only USE ARABIC LANGUAGE\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        2064
+      ],
+      "id": "a2724e30-36df-4e84-8129-22553c4a921b",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiKey = \"AIzaSyAnoTBXuKFoXP6zXjO-6doghHvG53ryFec\";\n\nconst parts = [];\nparts.push({ text: $json.final_prompt });\n\n// 1) Inputs from the trigger (the parent workflow payload)\nconst productTrigger = $('When Executed by Another Workflow').first().json;\nconst logoTrigger = $('Get Client Info').first().json.brand_assets.logo_url;\n\n// These flags decide whether to include the images\nconst hasProductInput = !!(productTrigger.productImage && String(productTrigger.productImage).trim().length > 0);\n\n\nconst hasLogoInput = !!(logoTrigger && String(logoTrigger).trim().length > 0);\n\n// 2) If trigger says product exists -> take it from Extract node and add it\nif (hasProductInput) {\n  const product = $('Extract from File1').first().json?.product;\n\n  parts.push({\n    inlineData: {\n      mimeType: \"image/png\",\n      data: product,\n    },\n  });\n}\n\n// 3) If trigger says logo exists -> take it from Extract node and add it\nif (hasLogoInput) {\n  const logo = $('Extract from File').first()?.json?.logo;\n\n  parts.push({\n    inlineData: {\n      mimeType: \"image/png\",\n      data: logo,\n    },\n  });\n}\n\nconst body = {\n  contents: [{ parts }],\n  generationConfig: {\n    responseModalities: [\"IMAGE\"],\n    imageConfig: { aspectRatio: \"1:1\", imageSize: \"1K\" },\n  },\n};\n\nconsole.log(\"boooody\", body)\n\nconst response = await this.helpers.httpRequest({\n  method: \"POST\",\n  url: \"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent\",\n  headers: {\n    \"x-goog-api-key\": apiKey,\n    \"Content-Type\": \"application/json\",\n  },\n  body,\n  json: true,\n});\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        2064
+      ],
+      "id": "29b9a162-c874-40d3-bcf1-70ca74fce334",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) Get the base64 image string from the Gemini response\n// Adjust this path if your data sits somewhere else in your JSON\nconst b64 =\n  $json.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data)?.inlineData?.data\n  || $json.candidates?.[0]?.content?.parts?.find(p => p.inline_data?.data)?.inline_data?.data\n  || $json.data; // fallback if you mapped it already\n\nif (!b64) {\n  throw new Error(\"No base64 image data found in response\");\n}\n\n// 2) Convert base64 -> Buffer\nconst buffer = Buffer.from(b64, \"base64\");\n\n// 3) Put into n8n binary output\nreturn [\n  {\n    json: {\n      ...$json,\n      image_mime: \"image/jpeg\", // change to image/png if you requested PNG\n      image_size_bytes: buffer.length,\n    },\n    binary: {\n      image: await this.helpers.prepareBinaryData(buffer, \"gemini-output.png\", \"image/jpeg\"),\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        2256
+      ],
+      "id": "1ae51767-51bc-4b14-bfa4-3580b5381e8c",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "633f46b8-da48-4b26-89de-9fc3d35d7892",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.productImage }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        1984
+      ],
+      "id": "727683cc-7757-4b5d-9ce1-402881878814",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "phoneNumberId": "=965331439993382",
+        "mediaPropertyName": "image",
+        "additionalFields": {}
+      },
+      "id": "d8271998-63b2-4a73-b591-4a4a9e012cd6",
+      "name": "Upload to WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        64,
+        3184
+      ],
+      "webhookId": "generate-design-upload",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "eefrABRFJOQa66PK",
+          "name": "WhatsApp account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('When Executed by Another Workflow').item.json.imageUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -96,
+        2688
+      ],
+      "id": "0d936d7f-bd83-4d7e-8c58-4e4ea7660391",
+      "name": "HTTP Request5"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "originalImage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        2688
+      ],
+      "id": "c67cda56-8107-45cb-bf55-540ae3cd3419",
+      "name": "Extract from File3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4d9a189a-9d53-49e2-93f1-54f983968602",
+              "name": "final_prompt",
+              "value": "={{ $('When Executed by Another Workflow').item.json.userPrompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        2960
+      ],
+      "id": "f12bc5fe-1e72-4dcc-8b7a-044925f8a5f0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const apiKey = \"AIzaSyAnoTBXuKFoXP6zXjO-6doghHvG53ryFec\";\n\nconst parts = [];\nparts.push({ text: $json.final_prompt });\n\n// 1) Inputs from the trigger (the parent workflow payload)\nconst imageTrigger = $('When Executed by Another Workflow').first().json;\n\n// const logoTrigger = $('Get Client Info').first().json.brand_assets.logo_url;\n\n// These flags decide whether to include the images\nconst hasImage = !!(imageTrigger.imageUrl && String(imageTrigger.imageUrl).trim().length > 0);\n\n\n// const hasLogoInput = !!(logoTrigger && String(logoTrigger).trim().length > 0);\n\n// 2) If trigger says product exists -> take it from Extract node and add it\nif (hasImage) {\n  const originalImage = $('Extract from File3').first().json?.originalImage;\n\n  parts.push({\n    inlineData: {\n      mimeType: \"image/png\",\n      data: originalImage,\n    },\n  });\n}\n\n// 3) If trigger says logo exists -> take it from Extract node and add it\n// if (hasLogoInput) {\n//   const logo = $('Extract from File2').first()?.json?.logo;\n\n//   parts.push({\n//     inlineData: {\n//       mimeType: \"image/png\",\n//       data: logo,\n//     },\n//   });\n// }\n\nconst body = {\n  contents: [{ parts }],\n  generationConfig: {\n    responseModalities: [\"IMAGE\"],\n    imageConfig: { aspectRatio: \"1:1\", imageSize: \"1K\" },\n  },\n};\n\nconst response = await this.helpers.httpRequest({\n  method: \"POST\",\n  url: \"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent\",\n  headers: {\n    \"x-goog-api-key\": apiKey,\n    \"Content-Type\": \"application/json\",\n  },\n  body,\n  json: true,\n});\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        2960
+      ],
+      "id": "a5832cbd-d531-40ff-91fa-a1f3f6d3674f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) Get the base64 image string from the Gemini response\n// Adjust this path if your data sits somewhere else in your JSON\nconst b64 =\n  $json.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data)?.inlineData?.data\n  || $json.candidates?.[0]?.content?.parts?.find(p => p.inline_data?.data)?.inline_data?.data\n  || $json.data; // fallback if you mapped it already\n\nif (!b64) {\n  throw new Error(\"No base64 image data found in response\");\n}\n\n// 2) Convert base64 -> Buffer\nconst buffer = Buffer.from(b64, \"base64\");\n\n// 3) Put into n8n binary output\nreturn [\n  {\n    json: {\n      ...$json,\n      image_mime: \"image/jpeg\", // change to image/png if you requested PNG\n      image_size_bytes: buffer.length,\n    },\n    binary: {\n      image: await this.helpers.prepareBinaryData(buffer, \"gemini-output.png\", \"image/jpeg\"),\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        3184
+      ],
+      "id": "5fd8a3ae-933e-4c54-8d18-2f53cf703560",
+      "name": "Code in JavaScript6"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "userPrompt": "remove the text beside the burger and make the french fries 6 pieces",
+          "imageUrl": "https://getadly.com/uploads/products/design_job32_1760288424_2337013073399635.png",
+          "jobId": "119",
+          "clientId": "12"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Client Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate prompt",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate An Image With Logo": {
+      "main": [
+        [
+          {
+            "node": "Upload media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Generate An Image With Logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Convert To Binary Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert To Binary Image": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate prompt": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate prompt1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate prompt1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate An Image With Logo1": {
+      "main": [
+        [
+          {
+            "node": "Upload media1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Generate An Image With Logo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download media1": {
+      "main": [
+        [
+          {
+            "node": "Download Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image1": {
+      "main": [
+        [
+          {
+            "node": "Convert To Binary Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert To Binary Image1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate prompt1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Download Image2": {
+      "main": [
+        [
+          {
+            "node": "Upload media2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Prompts1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initial Prompt AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Set Prompts1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Product Design Prompt2": {
+      "main": [
+        [
+          {
+            "node": "Initial Prompt AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "Prepare Product Design Prompt2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client Info": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Upload to WhatsApp8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "Extract from File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Upload to WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c266fb63-0596-481e-a6f0-71eba09493e5",
+  "meta": {
+    "instanceId": "a7e367d5b049923fc2fe57ced60d0eee5246d33d838232f14626f381ac5f0963"
+  },
+  "id": "bBZ9GeAN6XcB2NhT",
+  "tags": []
+}

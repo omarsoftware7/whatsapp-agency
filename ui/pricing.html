@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adly Web - Pricing</title>
+  <link rel="stylesheet" href="/ui/styles.css?v=20260125b">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6D6PKSE06T"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6D6PKSE06T');
+  </script>
+  <script>
+    (function (c, s, q, u, a, r, e) {
+        c.hj=c.hj||function(){(c.hj.q=c.hj.q||[]).push(arguments)};
+        c._hjSettings = { hjid: a };
+        r = s.getElementsByTagName('head')[0];
+        e = s.createElement('script');
+        e.async = true;
+        e.src = q + c._hjSettings.hjid + u;
+        r.appendChild(e);
+    })(window, document, 'https://static.hj.contentsquare.net/c/csq-', '.js', 6550468);
+  </script>
+</head>
+<body class="page app-page pricing-page">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-lockup">
+          <div class="brand-logo">
+            <img id="sidebar-brand-logo" src="" alt="Brand logo">
+          </div>
+          <div>
+            <div class="brand-title" id="sidebar-brand-name">Adly</div>
+          </div>
+        </div>
+        <button class="icon-button sidebar-close" id="sidebar-close" aria-label="Close">✕</button>
+      </div>
+      <div class="sidebar-section"></div>
+      <div class="sidebar-section brand-switcher-slot" id="brand-switcher-slot-sidebar">
+        <div class="brand-switcher" id="brand-switcher">
+          <select class="select" id="brand-select"></select>
+          <a class="button add-brand-button" href="/ui/onboarding.html" aria-label="Add brand" data-i18n="common_add_brand">Add Brand</a>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" data-nav="dashboard" href="/ui/app.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-home"></use></svg><span data-i18n="nav_dashboard">Dashboard</span></a>
+        <a class="nav-item" data-nav="library" data-client-link="/ui/brand-library.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-library"></use></svg><span data-i18n="nav_library">Brand library</span></a>
+        <a class="nav-item" data-nav="landing-pages" data-client-link="/ui/landing-pages.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-landing"></use></svg><span data-i18n="nav_landing_pages">Landing pages</span></a>
+        <a class="nav-item" data-nav="leads" data-client-link="/ui/leads.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-leads"></use></svg><span data-i18n="nav_leads">Leads</span></a>
+        <a class="nav-item" data-nav="business-cards" data-client-link="/ui/business-card.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-card"></use></svg><span data-i18n="nav_business_cards">Business card</span></a>
+        <a class="nav-item" data-nav="posts" data-client-link="/ui/brand-posts.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-posts"></use></svg><span data-i18n="nav_posts">Posts</span></a>
+        <a class="nav-item" data-nav="content-plan" data-client-link="/ui/content-plan.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-calendar"></use></svg><span data-i18n="nav_content_plan">Plan next month</span></a>
+        <a class="nav-item" data-nav="pricing" href="/ui/pricing.html"><svg class="nav-icon" aria-hidden="true"><use href="/ui/icons.svg#icon-pricing"></use></svg><span data-i18n="nav_pricing">Pricing</span></a>
+      </nav>
+      <div class="sidebar-section nav-credits" id="nav-credits"></div>
+      <div class="sidebar-section admin-nav" id="admin-nav" style="display:none;">
+        <div class="sidebar-label" data-i18n="nav_admin">Admin</div>
+        <a class="nav-item" id="admin-users-link" href="/ui/admin-users.html" data-i18n="common_users">Users</a>
+        <a class="nav-item" id="admin-brands-link" href="/ui/admin-brands.html" data-i18n="common_brands">Brands</a>
+        <a class="nav-item" id="admin-jobs-link" href="/ui/admin-jobs.html" data-i18n="common_jobs">Jobs</a>
+        <a class="nav-item" id="admin-landing-link" href="/ui/admin-landing-pages.html" data-i18n="common_landing_pages">Landing pages</a>
+        <a class="nav-item" id="admin-cards-link" href="/ui/admin-business-cards.html" data-i18n="common_business_cards">Business cards</a>
+        <a class="nav-item" id="admin-metrics-link" href="/ui/admin-metrics.html" data-i18n="common_metrics">Metrics</a>
+      </div>
+      <div class="sidebar-footer">
+        <select class="select lang-select" id="lang-select" aria-label="Language">
+          <option value="en">EN</option>
+          <option value="ar">AR</option>
+          <option value="he">HE</option>
+        </select>
+        <button class="button link" id="logout" data-i18n="common_logout">⎋ Logout</button>
+      </div>
+    </aside>
+    <div class="app-content">
+      <header class="app-header">
+        <div class="header-left">
+          <button class="icon-button" id="nav-toggle" aria-label="Open menu">☰</button>
+          <a class="user-chip" id="user-chip" href="/ui/profile.html" title="Edit profile">
+            <span class="user-avatar" id="user-avatar">U</span>
+            <span class="user-chip-text">
+              <span class="user-chip-row">
+                <span id="user-welcome" data-i18n="welcome_user">Welcome</span>
+                <span class="user-chip-caret">→</span>
+              </span>
+              <span id="plan-banner" class="plan-inline" style="display:none;"></span>
+            </span>
+          </a>
+        </div>
+        <div class="header-title" id="header-brand-name" style="display:none;">Adly</div>
+        <div class="header-actions">
+          <div id="header-credits" class="header-credits"></div>
+          <div id="mobile-credits" class="mobile-credits"></div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="section-header" style="margin-top: 16px;">
+          <div class="section-title" data-i18n="pricing_title">Plans & billing</div>
+        </div>
+    <div class="pricing-trust pricing-trust-top">
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="trust-icon"><svg aria-hidden="true"><use href="/ui/icons.svg#icon-calendar"></use></svg></div>
+          <div>
+            <div class="trust-title" data-i18n="pricing_trust_trial_title">7 days free trial</div>
+            <div class="muted" data-i18n="pricing_trust_trial_desc">Start now, pay after your trial ends.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon"><svg aria-hidden="true"><use href="/ui/icons.svg#icon-card"></use></svg></div>
+          <div>
+            <div class="trust-title" data-i18n="pricing_trust_no_charge_title">No charge today</div>
+            <div class="muted" data-i18n="pricing_trust_no_charge_desc">We only bill after your 7-day trial.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon"><svg aria-hidden="true"><use href="/ui/icons.svg#icon-check"></use></svg></div>
+          <div>
+            <div class="trust-title" data-i18n="pricing_trust_cancel_title">Cancel anytime</div>
+            <div class="muted" data-i18n="pricing_trust_cancel_desc">Keep your assets and stop billing instantly.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pricing-hero">
+      <div class="pricing-header">
+        <div>
+          <h2 data-i18n="pricing_choose_plan">Choose your plan</h2>
+          <p class="muted" data-i18n="pricing_subtitle">Start your 7 day free trial now.</p>
+        </div>
+      </div>
+      <div id="billing-alert"></div>
+      <div class="pricing-grid">
+        <div class="pricing-card" data-tier="starter" data-price="179">
+          <div class="section-title" data-i18n="pricing_plan_starter">Starter</div>
+          <div class="muted" data-i18n="pricing_plan_starter_tagline">For solo creators & small brands</div>
+          <div class="pricing-price">
+            <span class="price-value">₪179</span>
+            <span class="price-cycle" data-i18n="pricing_per_month">/m</span>
+          </div>
+          <div class="pricing-note" data-i18n="pricing_plan_starter_note">7 days free, then ₪179/mo</div>
+          <ul class="pricing-list">
+            <li data-i18n="pricing_starter_text">50 text credits</li>
+            <li data-i18n="pricing_starter_image">30 image credits</li>
+            <li data-i18n="pricing_starter_video">5 video credits</li>
+            <li data-i18n="pricing_starter_landing">2 landing pages</li>
+            <li data-i18n="pricing_starter_brands">1 brand</li>
+            <li data-i18n="pricing_starter_support">Community support</li>
+            <li data-i18n="pricing_starter_tools">All core AI tools</li>
+          </ul>
+          <button class="button pricing-cta" type="button" data-plan="starter" data-i18n="pricing_try_free">Try 7 days free</button>
+        </div>
+        <div class="pricing-card" data-tier="growth" data-price="449">
+          <div class="section-title" data-i18n="pricing_plan_growth">Growth</div>
+          <div class="muted" data-i18n="pricing_plan_growth_tagline">For growing teams</div>
+          <div class="pricing-price">
+            <span class="price-value">₪449</span>
+            <span class="price-cycle" data-i18n="pricing_per_month">/m</span>
+          </div>
+          <div class="pricing-note" data-i18n="pricing_plan_growth_note">7 days free, then ₪449/mo</div>
+          <ul class="pricing-list">
+            <li data-i18n="pricing_growth_text">120 text credits</li>
+            <li data-i18n="pricing_growth_image">70 image credits</li>
+            <li data-i18n="pricing_growth_video">10 video credits</li>
+            <li data-i18n="pricing_growth_landing">6 landing pages</li>
+            <li data-i18n="pricing_growth_brands">5 brands</li>
+            <li data-i18n="pricing_growth_cards">Business cards per brand</li>
+            <li data-i18n="pricing_growth_support">Priority support</li>
+          </ul>
+          <button class="button pricing-cta" type="button" data-plan="growth" data-i18n="pricing_try_free">Try 7 days free</button>
+        </div>
+        <div class="pricing-card highlight" data-tier="pro" data-price="899">
+          <div class="section-title" data-i18n="pricing_plan_pro">Pro</div>
+          <div class="muted" data-i18n="pricing_plan_pro_tagline">For performance teams</div>
+          <div class="pricing-price">
+            <span class="price-value">₪899</span>
+            <span class="price-cycle" data-i18n="pricing_per_month">/m</span>
+          </div>
+          <div class="pricing-note" data-i18n="pricing_plan_pro_note">7 days free, then ₪899/mo</div>
+          <ul class="pricing-list">
+            <li data-i18n="pricing_pro_text">350 text credits</li>
+            <li data-i18n="pricing_pro_image">200 image credits</li>
+            <li data-i18n="pricing_pro_video">25 video credits</li>
+            <li data-i18n="pricing_pro_landing">10 landing pages</li>
+            <li data-i18n="pricing_pro_brands">10 brands</li>
+            <li data-i18n="pricing_pro_support">VIP support</li>
+            <li data-i18n="pricing_pro_access">Early testing access</li>
+          </ul>
+          <button class="button pricing-cta" type="button" data-plan="pro" data-i18n="pricing_try_free">Try 7 days free</button>
+        </div>
+        <div class="pricing-card" data-tier="agency" data-price="1499">
+          <div class="section-title" data-i18n="pricing_plan_agency">Agency</div>
+          <div class="muted" data-i18n="pricing_plan_agency_tagline">For large agencies</div>
+          <div class="pricing-price">
+            <span class="price-value">₪1499</span>
+            <span class="price-cycle" data-i18n="pricing_per_month">/m</span>
+          </div>
+          <div class="pricing-note" data-i18n="pricing_plan_agency_note">7 days free, then ₪1499/mo</div>
+          <ul class="pricing-list">
+            <li data-i18n="pricing_agency_text">1000 text credits</li>
+            <li data-i18n="pricing_agency_image">500 image credits</li>
+            <li data-i18n="pricing_agency_video">50 video credits</li>
+            <li data-i18n="pricing_agency_landing">50 landing pages</li>
+            <li data-i18n="pricing_agency_brands">Unlimited brands</li>
+            <li data-i18n="pricing_agency_features">All features included</li>
+            <li data-i18n="pricing_agency_success">Dedicated success manager</li>
+          </ul>
+          <button class="button pricing-cta" type="button" data-plan="agency" data-i18n="pricing_try_free">Try 7 days free</button>
+        </div>
+      </div>
+      <div class="pricing-credits-explainer" style="text-align:center;margin:24px 0 16px;padding:0 16px;">
+        <p class="muted" data-i18n="pricing_credits_explainer">Credits are used each time you generate content. 1 image = 1 image credit. 1 ad copy = 1 text credit. Credits reset monthly.</p>
+      </div>
+      <div class="pricing-custom">
+        <div>
+          <div class="section-title" data-i18n="pricing_custom_title">Custom plans for high-volume teams</div>
+          <div class="muted" data-i18n="pricing_custom_desc">Scale across many brands, prioritize video-only credits, or tailor limits to your workflow. We'll design a plan that matches your usage and reporting needs.</div>
+        </div>
+        <a class="button secondary pricing-custom-cta" href="/ui/contact.html" data-i18n="pricing_custom_cta">Contact sales</a>
+      </div>
+    </div>
+
+    <div class="pricing-trust-icons" style="margin-top:24px;">
+      <div class="trust-icons-row" role="list">
+        <div class="trust-icon-pill" role="listitem">
+          <div class="trust-icon"><svg aria-hidden="true"><use href="/ui/icons.svg#icon-calendar"></use></svg></div>
+          <div class="trust-icon-text" data-i18n="pricing_trust_trial_title">7 days free trial</div>
+        </div>
+        <div class="trust-icon-pill" role="listitem">
+          <div class="trust-icon"><svg aria-hidden="true"><use href="/ui/icons.svg#icon-card"></use></svg></div>
+          <div class="trust-icon-text" data-i18n="pricing_trust_no_charge_title">No charge today</div>
+        </div>
+        <div class="trust-icon-pill" role="listitem">
+          <div class="trust-icon"><svg aria-hidden="true"><use href="/ui/icons.svg#icon-check"></use></svg></div>
+          <div class="trust-icon-text" data-i18n="pricing_trust_cancel_title">Cancel anytime</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pricing-trust pricing-trust-simple pricing-trust-vertical" style="margin-top:18px;text-align:center;">
+      <div class="trust-grid" style="justify-content:center;align-items:center;">
+        <div class="trust-item trust-item-vertical" style="justify-content:center;align-items:center;flex-direction:column;gap:8px;">
+          <div class="trust-icon"><svg aria-hidden="true"><use href="/ui/icons.svg#icon-lock"></use></svg></div>
+          <div>
+            <div class="trust-title" data-i18n="pricing_secure_title">Secure billing</div>
+            <div class="muted" data-i18n="pricing_secure_desc">Payments are encrypted and PCI compliant.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="plan-modal">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <button class="modal-close" data-close>✕</button>
+      <div class="modal-title" data-i18n="pricing_modal_title">Start your free trial</div>
+      <div class="modal-subtitle" data-i18n="pricing_modal_subtitle">You won’t be charged today. Billing starts in 7 days.</div>
+      <div class="modal-plan">
+        <div>
+        <div class="section-title" id="modal-plan-name">Starter</div>
+        <div class="muted" id="modal-plan-price">₪179 <span data-i18n="pricing_per_month">/m</span> <span data-i18n="pricing_after_trial">after trial</span></div>
+        </div>
+      <div class="trial-badge" data-i18n="pricing_trial_badge">7‑day free</div>
+      </div>
+        <div class="modal-payment hidden" id="modal-payment">
+        <div class="section-title" data-i18n="pricing_choose_payment">Choose payment method</div>
+        <div class="inline-actions">
+          <button class="button secondary selected" id="pay-method-paypal" data-i18n="pricing_paypal">PayPal</button>
+          <button class="button secondary" id="pay-method-card" data-i18n="pricing_pay_card" disabled>Credit Card</button>
+        </div>
+        <div class="modal-note" id="payment-note" data-i18n="pricing_card_soon">Card payments are coming soon. Contact us to pay by card.</div>
+        <div id="paypal-checkout" class="modal-checkout">
+          <div class="section-title" data-i18n="pricing_paypal_title">Pay with PayPal</div>
+          <div class="muted" data-i18n="pricing_paypal_desc">You’ll be redirected to PayPal to confirm the subscription.</div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <button class="button" id="paypal-subscribe" data-i18n="pricing_continue_payment">Continue to payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/ui/shared.js?v=20260126"></script>
+  <script>
+    initAppShell('pricing', { allowEmptyBrands: true });
+    const alertBox = document.getElementById('billing-alert');
+
+    async function handlePayPalComplete() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('status') !== 'success') return;
+      const subscriptionId = params.get('subscription_id') || params.get('token');
+      if (!subscriptionId) return;
+      try {
+        await apiRequest('/web_paypal.php', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'complete', subscription_id: subscriptionId })
+        });
+        window.location.href = '/ui/profile.html?payment=success';
+      } catch (error) {
+        showAlert(alertBox, error.message);
+      }
+    }
+
+    const modal = document.getElementById('plan-modal');
+    const modalName = document.getElementById('modal-plan-name');
+    const modalPrice = document.getElementById('modal-plan-price');
+    const modalPayment = document.getElementById('modal-payment');
+    const paypalBox = document.getElementById('paypal-checkout');
+    const paypalBtn = document.getElementById('pay-method-paypal');
+    const paypalSubscribe = document.getElementById('paypal-subscribe');
+    const paymentNote = document.getElementById('payment-note');
+    const referralInput = document.getElementById('referral-code');
+    let selectedPlan = 'starter';
+    let selectedPrice = 179;
+
+    const setMethod = () => {
+      paypalBox.style.display = 'block';
+      paypalSubscribe.disabled = false;
+    };
+
+    const openModal = () => {
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      modalPayment.classList.remove('hidden');
+      paymentNote.textContent = t('pricing_card_soon');
+      setMethod();
+    };
+
+    const closeModal = () => {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    };
+
+    modal.querySelectorAll('[data-close]').forEach((el) => {
+      el.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('click', (event) => {
+      const btn = event.target.closest('[data-plan]');
+      if (!btn) return;
+      if (!modal) {
+        showAlert(alertBox, 'Pricing modal missing');
+        return;
+      }
+      const card = btn.closest('.pricing-card');
+      selectedPlan = btn.getAttribute('data-plan');
+      selectedPrice = Number(card?.dataset.price || 0);
+      const planName = card?.querySelector('.section-title')?.textContent || 'Plan';
+      modalName.textContent = `${planName} - ${t('pricing_trial_badge')}`;
+      const perMonth = t('pricing_per_month');
+      const afterTrial = t('pricing_after_trial');
+      modalPrice.innerHTML = `₪${selectedPrice} <span>${perMonth}</span> <span>${afterTrial}</span>`;
+      openModal();
+    });
+
+    paypalBtn.addEventListener('click', () => {
+      modalPayment.classList.remove('hidden');
+      paypalBtn.disabled = false;
+      paypalSubscribe.disabled = false;
+      paymentNote.textContent = t('pricing_card_soon');
+      setMethod();
+    });
+
+    paypalSubscribe.addEventListener('click', async () => {
+      try {
+        paypalSubscribe.classList.add('loading');
+        paypalSubscribe.disabled = true;
+        const data = await apiRequest('/web_paypal.php', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'create_subscription',
+            tier: selectedPlan,
+            trial_days: 7
+          })
+        });
+        if (data.approval_url) {
+          window.location.href = data.approval_url;
+        } else {
+          showAlert(alertBox, 'PayPal approval URL missing');
+        }
+      } catch (error) {
+        const detail = error?.details ? ` (${error.details})` : '';
+        showAlert(alertBox, `${error.message || 'Request failed'}${detail}`);
+      } finally {
+        paypalSubscribe.classList.remove('loading');
+        paypalSubscribe.disabled = false;
+      }
+    });
+
+
+    handlePayPalComplete();
+  </script>
+</body>
+</html>

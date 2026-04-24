@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adly Admin - Jobs Dashboard</title>
+  <link rel="stylesheet" href="/ui/styles.css?v=20260125b">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6D6PKSE06T"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6D6PKSE06T');
+  </script>
+  <script>
+    (function (c, s, q, u, a, r, e) {
+        c.hj=c.hj||function(){(c.hj.q=c.hj.q||[]).push(arguments)};
+        c._hjSettings = { hjid: a };
+        r = s.getElementsByTagName('head')[0];
+        e = s.createElement('script');
+        e.async = true;
+        e.src = q + c._hjSettings.hjid + u;
+        r.appendChild(e);
+    })(window, document, 'https://static.hj.contentsquare.net/c/csq-', '.js', 6550468);
+  </script>
+  <style>
+    /* Admin Jobs Dashboard Styles */
+    .admin-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--color-card);
+      border: 1px solid var(--brand-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    
+    .stat-card:hover {
+      border-color: var(--brand-primary);
+      box-shadow: 0 4px 12px rgba(147, 51, 234, 0.1);
+    }
+    
+    .stat-card.highlight {
+      background: linear-gradient(135deg, #faf5ff 0%, #fce7f3 100%);
+      border-color: var(--brand-primary);
+    }
+    
+    .stat-card.warning {
+      background: #fef3c7;
+      border-color: #f59e0b;
+    }
+    
+    .stat-card.danger {
+      background: #fee2e2;
+      border-color: #ef4444;
+    }
+    
+    .stat-card.success {
+      background: #dcfce7;
+      border-color: #22c55e;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--brand-primary);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card.warning .stat-value { color: #f59e0b; }
+    .stat-card.danger .stat-value { color: #ef4444; }
+    .stat-card.success .stat-value { color: #22c55e; }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--color-muted);
+      font-weight: 500;
+    }
+    
+    .stat-sublabel {
+      font-size: 11px;
+      color: var(--color-muted);
+      margin-top: 4px;
+    }
+    
+    /* Jobs Layout */
+    .jobs-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 24px;
+    }
+    
+    @media (max-width: 1100px) {
+      .jobs-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Job List Item - Compact with timing */
+    .admin-job-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 16px;
+      border: 1px solid var(--brand-border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: var(--color-card);
+    }
+    
+    .admin-job-item:hover {
+      border-color: var(--brand-primary);
+      background: var(--brand-light);
+    }
+    
+    .admin-job-item.selected {
+      border-color: var(--brand-primary);
+      background: var(--brand-light);
+      box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+    }
+    
+    .admin-job-item.slow {
+      border-left: 4px solid #f59e0b;
+    }
+    
+    .admin-job-item.very-slow {
+      border-left: 4px solid #ef4444;
+    }
+    
+    .job-thumb-small {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--brand-border);
+    }
+    
+    .job-thumb-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--brand-light) 0%, var(--brand-border) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .job-main-info {
+      min-width: 0;
+    }
+    
+    .job-main-info .job-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--color-text);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .job-main-info .job-meta {
+      font-size: 12px;
+      color: var(--color-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .job-main-info .job-message {
+      font-size: 12px;
+      color: var(--color-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+      margin-top: 2px;
+    }
+    
+    .job-timing {
+      text-align: right;
+      min-width: 90px;
+    }
+    
+    .job-timing .time-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-primary);
+    }
+    
+    .job-timing .time-value.slow { color: #f59e0b; }
+    .job-timing .time-value.very-slow { color: #ef4444; }
+    .job-timing .time-value.fast { color: #22c55e; }
+    
+    .job-timing .time-label {
+      font-size: 10px;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .job-timing .job-date {
+      font-size: 11px;
+      color: var(--color-muted);
+      margin-top: 2px;
+    }
+    
+    /* Stage badges in list */
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--brand-light);
+      color: var(--brand-primary);
+    }
+    
+    .stage-badge.waiting {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .stage-badge.processing {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .stage-badge.completed {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .stage-badge.failed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    /* Job Details Panel */
+    .job-details-panel {
+      position: sticky;
+      top: 80px;
+    }
+    
+    .detail-section {
+      margin-bottom: 20px;
+    }
+    
+    .detail-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--brand-border);
+      font-size: 13px;
+    }
+    
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      color: var(--color-muted);
+    }
+    
+    .detail-value {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    
+    .detail-value.highlight {
+      color: var(--brand-primary);
+    }
+    
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--brand-border);
+    }
+    
+    .timeline-item {
+      position: relative;
+      padding: 8px 0;
+      font-size: 12px;
+    }
+    
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 12px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--brand-border);
+      border: 2px solid var(--color-card);
+    }
+    
+    .timeline-item.active::before {
+      background: var(--brand-primary);
+    }
+    
+    .timeline-item.completed::before {
+      background: #22c55e;
+    }
+    
+    .timeline-time {
+      color: var(--color-muted);
+      font-size: 11px;
+    }
+    
+    .timeline-event {
+      color: var(--color-text);
+      font-weight: 500;
+    }
+    
+    .timeline-duration {
+      color: var(--brand-primary);
+      font-weight: 700;
+      margin-left: 8px;
+    }
+    
+    /* Quick filters */
+    .quick-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    
+    .quick-filter {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--brand-border);
+      background: var(--color-card);
+      color: var(--color-muted);
+      transition: all 0.15s ease;
+    }
+    
+    .quick-filter:hover {
+      border-color: var(--brand-primary);
+      color: var(--brand-primary);
+    }
+    
+    .quick-filter.active {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+      color: white;
+    }
+    
+    .quick-filter .count {
+      background: rgba(255,255,255,0.2);
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-left: 4px;
+      font-size: 10px;
+    }
+    
+    .quick-filter:not(.active) .count {
+      background: var(--brand-light);
+      color: var(--brand-primary);
+    }
+    
+    /* Search bar */
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .search-bar .input {
+      flex: 1;
+    }
+    
+    /* Preview image in details */
+    .detail-preview {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+    
+    .ad-copy-preview {
+      background: var(--brand-light);
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    
+    /* Empty state */
+    .empty-details {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--color-muted);
+    }
+    
+    .empty-details .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* Edit History */
+    .edit-history {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .edit-item {
+      background: var(--brand-light);
+      border-radius: 10px;
+      padding: 12px;
+      border-left: 3px solid var(--brand-primary);
+    }
+    
+    .edit-item.completed {
+      border-left-color: #22c55e;
+    }
+    
+    .edit-item.failed {
+      border-left-color: #ef4444;
+      background: #fef2f2;
+    }
+    
+    .edit-item.pending {
+      border-left-color: #f59e0b;
+      background: #fefce8;
+    }
+    
+    .edit-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    
+    .edit-number {
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    
+    .edit-time {
+      color: var(--color-muted);
+    }
+    
+    .edit-duration {
+      background: var(--brand-primary);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    
+    .edit-request {
+      font-size: 13px;
+      color: var(--color-text);
+      font-style: italic;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    
+    .edit-error {
+      font-size: 12px;
+      color: #dc2626;
+      background: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .edit-thumb {
+      width: 100%;
+      max-width: 200px;
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body class="page">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-lockup">
+        <div class="brand-logo">⚡</div>
+        <div>
+          <div class="brand-title">Admin Dashboard</div>
+          <div class="brand-subtitle">Jobs & Performance</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="button link" href="/ui/admin-users.html">Users</a>
+        <a class="button link" href="/ui/admin-brands.html">Brands</a>
+        <a class="button link active" href="/ui/admin-jobs.html">Jobs</a>
+        <a class="button link" href="/ui/admin-landing-pages.html">Landing Pages</a>
+        <a class="button link" href="/ui/admin-business-cards.html">Business Cards</a>
+        <a class="button link" href="/ui/admin-metrics.html">Metrics</a>
+        <a class="button secondary" href="/ui/app.html">← Back to App</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 40px;">
+    <!-- Stats Dashboard -->
+    <div class="admin-dashboard" id="stats-dashboard">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-today">-</div>
+        <div class="stat-label">Jobs Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-week">-</div>
+        <div class="stat-label">Jobs This Week</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="stat-value" id="stat-avg-time">-</div>
+        <div class="stat-label">Avg Processing</div>
+        <div class="stat-sublabel" id="stat-time-range"></div>
+      </div>
+      <div class="stat-card warning" id="stuck-card" style="display: none;">
+        <div class="stat-value" id="stat-stuck">0</div>
+        <div class="stat-label">Stuck Jobs</div>
+        <div class="stat-sublabel">Waiting &gt;24h</div>
+      </div>
+      <div class="stat-card danger" id="slow-card" style="display: none;">
+        <div class="stat-value" id="stat-slow">0</div>
+        <div class="stat-label">Slow Jobs</div>
+        <div class="stat-sublabel">&gt;5 min processing</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-value" id="stat-completed">-</div>
+        <div class="stat-label">Completed</div>
+        <div class="stat-sublabel">This week</div>
+      </div>
+    </div>
+
+    <!-- Jobs Layout -->
+    <div class="jobs-layout">
+      <!-- Jobs List -->
+      <section class="card" style="padding: 20px;">
+        <div class="search-bar">
+          <input id="job-search" class="input" type="search" placeholder="🔍 Search by brand, user, or message...">
+          <select id="job-type-filter" class="select" style="width: auto;">
+            <option value="all">All Types</option>
+            <option value="announcement">Announcement</option>
+            <option value="product_sale">Product Sale</option>
+            <option value="from_image">From Image</option>
+            <option value="before_after">Before/After</option>
+            <option value="ugc_video">UGC Video</option>
+            <option value="multi_mode">Multi Mode</option>
+          </select>
+        </div>
+        
+        <div class="quick-filters" id="quick-filters">
+          <button class="quick-filter active" data-filter="all">All</button>
+          <button class="quick-filter" data-filter="processing">🔄 Processing</button>
+          <button class="quick-filter" data-filter="waiting">⏳ Waiting</button>
+          <button class="quick-filter" data-filter="completed">✅ Completed</button>
+          <button class="quick-filter" data-filter="slow">🐢 Slow</button>
+          <button class="quick-filter" data-filter="failed">❌ Failed</button>
+        </div>
+        
+        <div id="jobs-list" style="max-height: 600px; overflow-y: auto;"></div>
+        
+        <div class="pagination" style="margin-top: 16px;">
+          <button id="jobs-prev" class="button secondary">← Prev</button>
+          <div id="jobs-page" class="muted">Page 1</div>
+          <button id="jobs-next" class="button secondary">Next →</button>
+        </div>
+      </section>
+
+      <!-- Job Details Panel -->
+      <aside class="card job-details-panel" style="padding: 20px;">
+        <div id="job-details">
+          <div class="empty-details">
+            <div class="icon">📋</div>
+            <div>Select a job to see details</div>
+            <div class="muted" style="margin-top: 8px; font-size: 12px;">Click on any job to view full timeline and info</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="/ui/shared.js?v=20260126"></script>
+  <script src="/ui/admin-jobs.js?v=20260125b"></script>
+</body>
+</html>

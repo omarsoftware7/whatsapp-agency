@@ -1,0 +1,70 @@
+import { SessionUser } from '../../common/decorators/current-user.decorator';
+import { JobsService } from './jobs.service';
+export declare class JobsController {
+    private readonly jobs;
+    constructor(jobs: JobsService);
+    list(clientId: number, user: SessionUser): Promise<{
+        edit_status: string | null;
+        id: number;
+        client_id: number;
+        client: import("../../entities/client.entity").Client;
+        job_type: import("../../entities/creative-job.entity").JobType;
+        user_message: string;
+        user_images: string[];
+        product_images: string;
+        detected_language: string;
+        creative_type: string;
+        extracted_data: Record<string, any>;
+        design_prompt: string;
+        image_size: string;
+        language: string;
+        media_type: string;
+        design_variations: string[];
+        design_approved: boolean;
+        design_approved_at: Date;
+        approved_design_index: number;
+        ad_copy: string;
+        ad_copy_approved: boolean;
+        ad_copy_approved_at: Date;
+        publish_approved: boolean;
+        publish_approved_at: Date;
+        facebook_post_id: string;
+        instagram_post_id: string;
+        instagram_permalink: string;
+        published_at: Date;
+        multi_products: any[];
+        is_bulk_sale: boolean;
+        bulk_products: any[];
+        template_approved: boolean;
+        reel_video_url: string;
+        reel_duration_seconds: number;
+        current_stage: import("../../entities/creative-job.entity").JobStage;
+        rejection_count: number;
+        error_message: string;
+        credits_cost: number;
+        credits_charged: boolean;
+        created_at: Date;
+        completed_at: Date;
+        processing_time_ms: number;
+        product_images_count: number;
+        processing_lock: boolean;
+        processing_lock_at: Date;
+        multiProducts: import("../../entities/web-multi-product.entity").WebMultiProduct[];
+        editRequests: import("../../entities/web-design-edit-request.entity").WebDesignEditRequest[];
+    }[]>;
+    create(body: any, user: SessionUser): Promise<import("../../entities/creative-job.entity").CreativeJob>;
+    cancel(id: number, user: SessionUser): Promise<import("../../entities/creative-job.entity").CreativeJob>;
+    reset(id: number, user: SessionUser): Promise<import("../../entities/creative-job.entity").CreativeJob>;
+    retryVideo(id: number, user: SessionUser): Promise<import("../../entities/creative-job.entity").CreativeJob>;
+    softDelete(id: number, user: SessionUser): Promise<{
+        success: boolean;
+    }>;
+    submitEdit(id: number, body: {
+        user_edit: string;
+        image_url: string;
+        edit_mode: string;
+    }, user: SessionUser): Promise<{
+        success: boolean;
+    }>;
+    editHistory(id: number, user: SessionUser): Promise<import("../../entities/web-design-edit-request.entity").WebDesignEditRequest[]>;
+}

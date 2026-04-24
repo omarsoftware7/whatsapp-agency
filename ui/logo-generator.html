@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adly Web - Logo Generator</title>
+  <link rel="stylesheet" href="/ui/styles.css?v=20260125b">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6D6PKSE06T"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6D6PKSE06T');
+  </script>
+  <script>
+    (function (c, s, q, u, a, r, e) {
+        c.hj=c.hj||function(){(c.hj.q=c.hj.q||[]).push(arguments)};
+        c._hjSettings = { hjid: a };
+        r = s.getElementsByTagName('head')[0];
+        e = s.createElement('script');
+        e.async = true;
+        e.src = q + c._hjSettings.hjid + u;
+        r.appendChild(e);
+    })(window, document, 'https://static.hj.contentsquare.net/c/csq-', '.js', 6550468);
+  </script>
+</head>
+<body class="page">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-lockup">
+        <div class="brand-logo" data-brand-logo>Ad</div>
+        <div>
+          <div class="brand-title" data-brand-title>Adly</div>
+          <div class="brand-subtitle">Logo creation</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="button link" href="/ui/onboarding.html">Back to brand</a>
+        <a class="button link" href="/ui/app.html">Skip for now</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="grid">
+      <section class="card">
+        <h2>Create a logo for your brand</h2>
+        <p class="muted">We’ll generate 3 logo ideas. Pick one, edit it, or request new ideas.</p>
+        <div id="logo-alert"></div>
+        <div class="stack">
+          <button class="button" id="generate-logos">Generate 3 logo ideas</button>
+          <button class="button secondary" id="refresh-logos">Request 3 new ideas</button>
+        </div>
+      </section>
+      <aside class="card">
+        <div class="section-title">Brand info used</div>
+        <div id="brand-summary" class="stack">
+          <div class="muted">Loading brand...</div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card" style="margin-top: 24px;">
+      <div class="section-title">Logo options</div>
+      <div id="logo-options" class="logo-options-grid">
+        <div class="muted">Generate options to get started.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/ui/shared.js?v=20260126"></script>
+  <script>
+    setDefaultTheme();
+    const alertBox = document.getElementById('logo-alert');
+    const optionsGrid = document.getElementById('logo-options');
+    const brandSummary = document.getElementById('brand-summary');
+    const generateBtn = document.getElementById('generate-logos');
+    const refreshBtn = document.getElementById('refresh-logos');
+
+    function getClientId() {
+      const params = new URLSearchParams(window.location.search);
+      return Number(params.get('client_id'));
+    }
+
+    async function loadBrand() {
+      const clientId = getClientId();
+      if (!clientId) {
+        showAlert(alertBox, 'Missing client id');
+        return;
+      }
+      try {
+        const data = await apiRequest('/web_brands.php');
+        const brand = (data.items || []).find((b) => b.id === clientId);
+        if (!brand) {
+          showAlert(alertBox, 'Brand not found');
+          return;
+        }
+        setTheme({
+          primary: brand.primary_color || DEFAULT_THEME.primary,
+          secondary: brand.secondary_color || DEFAULT_THEME.secondary,
+          logoUrl: brand.logo_url || null,
+          name: brand.business_name || DEFAULT_THEME.name
+        });
+        brandSummary.innerHTML = `
+          <div class="section-title">${brand.business_name || 'Untitled brand'}</div>
+          <div class="muted">${brand.industry || 'Category not set'}</div>
+          <div class="muted">${brand.business_description || 'No description yet.'}</div>
+        `;
+      } catch (error) {
+        showAlert(alertBox, error.message);
+      }
+    }
+
+    function renderOptions(items) {
+      if (!items || !items.length) {
+        optionsGrid.innerHTML = '<div class="muted">No logo ideas yet.</div>';
+        return;
+      }
+      optionsGrid.innerHTML = items.map((item) => `
+        <div class="logo-option-card">
+          <img src="${item.image_url}" alt="Logo option">
+          <div class="logo-option-actions">
+            <button class="button approve-logo" data-id="${item.id}">Approve logo</button>
+            <button class="button secondary edit-logo" data-id="${item.id}">Edit</button>
+          </div>
+          <div class="logo-edit-box hidden" data-edit="${item.id}">
+            <input type="text" placeholder="Describe the changes you want">
+            <button class="button secondary save-logo-edit" data-id="${item.id}">Generate edit</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadOptions() {
+      const clientId = getClientId();
+      if (!clientId) return;
+      try {
+        const data = await apiRequest(`/web_logo.php?client_id=${clientId}`);
+        renderOptions(data.items || []);
+      } catch (error) {
+        showAlert(alertBox, error.message);
+      }
+    }
+
+    async function generate(action) {
+      const clientId = getClientId();
+      if (!clientId) return;
+      try {
+        clearAlert(alertBox);
+        generateBtn.classList.add('loading');
+        generateBtn.disabled = true;
+        const data = await apiRequest('/web_logo.php', {
+          method: 'POST',
+          body: JSON.stringify({ action, client_id: clientId })
+        });
+        renderOptions(data.items || []);
+      } catch (error) {
+        showAlert(alertBox, error.message);
+      } finally {
+        generateBtn.classList.remove('loading');
+        generateBtn.disabled = false;
+      }
+    }
+
+    optionsGrid.addEventListener('click', async (event) => {
+      const approve = event.target.closest('.approve-logo');
+      const edit = event.target.closest('.edit-logo');
+      const saveEdit = event.target.closest('.save-logo-edit');
+      if (approve) {
+        const id = Number(approve.dataset.id);
+        try {
+          await apiRequest('/web_logo.php', {
+            method: 'POST',
+            body: JSON.stringify({ action: 'approve', client_id: getClientId(), option_id: id })
+          });
+          showAlert(alertBox, 'Logo approved and saved', 'success');
+        } catch (error) {
+          showAlert(alertBox, error.message);
+        }
+      }
+      if (edit) {
+        const id = edit.dataset.id;
+        const box = optionsGrid.querySelector(`.logo-edit-box[data-edit="${id}"]`);
+        if (box) box.classList.toggle('hidden');
+      }
+      if (saveEdit) {
+        const id = Number(saveEdit.dataset.id);
+        const box = optionsGrid.querySelector(`.logo-edit-box[data-edit="${id}"]`);
+        const input = box ? box.querySelector('input') : null;
+        if (!input || !input.value.trim()) {
+          showAlert(alertBox, 'Enter edit instructions');
+          return;
+        }
+        try {
+          saveEdit.classList.add('loading');
+          saveEdit.disabled = true;
+          const data = await apiRequest('/web_logo.php', {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'edit',
+              client_id: getClientId(),
+              option_id: id,
+              edit_text: input.value.trim()
+            })
+          });
+          if (data.item) {
+            loadOptions();
+          }
+          input.value = '';
+          if (box) box.classList.add('hidden');
+        } catch (error) {
+          showAlert(alertBox, error.message);
+        } finally {
+          saveEdit.classList.remove('loading');
+          saveEdit.disabled = false;
+        }
+      }
+    });
+
+    generateBtn.addEventListener('click', () => generate('generate'));
+    refreshBtn.addEventListener('click', () => generate('regenerate'));
+
+    loadBrand();
+    loadOptions();
+  </script>
+</body>
+</html>

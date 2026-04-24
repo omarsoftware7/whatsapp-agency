@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="32" height="32" style="border: 1px solid #ccc;"></canvas>
+    <br>
+    <button onclick="downloadFavicon()">Download Favicon</button>
+    
+    <script>
+        function downloadFavicon() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create a simple robot icon
+            // Background
+            ctx.fillStyle = '#9333ea';
+            ctx.fillRect(0, 0, 32, 32);
+            
+            // Robot head (white)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(8, 6, 16, 20);
+            
+            // Eyes (blue)
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(10, 10, 4, 4);
+            ctx.fillRect(18, 10, 4, 4);
+            
+            // Mouth (gray)
+            ctx.fillStyle = '#374151';
+            ctx.fillRect(12, 18, 8, 2);
+            
+            // Antenna (pink)
+            ctx.fillStyle = '#ec4899';
+            ctx.fillRect(15, 4, 2, 4);
+            ctx.fillRect(14, 2, 4, 2);
+            
+            // Download as ICO
+            const link = document.createElement('a');
+            link.download = 'favicon.ico';
+            link.href = canvas.toDataURL('image/x-icon');
+            link.click();
+        }
+        
+        // Auto-generate on load
+        window.onload = function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create a simple robot icon
+            // Background
+            ctx.fillStyle = '#9333ea';
+            ctx.fillRect(0, 0, 32, 32);
+            
+            // Robot head (white)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(8, 6, 16, 20);
+            
+            // Eyes (blue)
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(10, 10, 4, 4);
+            ctx.fillRect(18, 10, 4, 4);
+            
+            // Mouth (gray)
+            ctx.fillStyle = '#374151';
+            ctx.fillRect(12, 18, 8, 2);
+            
+            // Antenna (pink)
+            ctx.fillStyle = '#ec4899';
+            ctx.fillRect(15, 4, 2, 4);
+            ctx.fillRect(14, 2, 4, 2);
+        }
+    </script>
+</body>
+</html>

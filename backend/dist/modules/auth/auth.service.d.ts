@@ -1,0 +1,51 @@
+import { Repository } from 'typeorm';
+import { WebUser } from '../../entities/web-user.entity';
+import { WebReferralCode } from '../../entities/web-referral-code.entity';
+import { WebReferral } from '../../entities/web-referral.entity';
+import { WebUserMeta } from '../../entities/web-user-meta.entity';
+import { RegisterDto } from './dto/register.dto';
+export declare const PLAN_CREDITS: Record<string, Record<string, number>>;
+export declare class AuthService {
+    private userRepo;
+    private refCodeRepo;
+    private refRepo;
+    private metaRepo;
+    constructor(userRepo: Repository<WebUser>, refCodeRepo: Repository<WebReferralCode>, refRepo: Repository<WebReferral>, metaRepo: Repository<WebUserMeta>);
+    register(dto: RegisterDto, referralCode?: string, heardAbout?: string): Promise<WebUser>;
+    login(email: string, password: string): Promise<WebUser>;
+    findById(id: number): Promise<WebUser | null>;
+    findOrCreateGoogleUser(profile: {
+        googleId: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        avatar?: string;
+    }): Promise<WebUser>;
+    applyReferral(userId: number, code: string): Promise<void>;
+    applyReferralRewards(referredUserId: number): Promise<void>;
+    getReferralCode(userId: number): Promise<string | null>;
+    buildSessionData(user: WebUser): {
+        web_user_id: number;
+        web_user_email: string;
+        web_user_role: string;
+        web_user_max_brands: number;
+        web_user_first_name: string;
+        web_user_last_name: string;
+        web_user_avatar_url: string;
+        web_user_theme_mode: string;
+        web_user_plan_tier: import("../../entities/web-user.entity").PlanTier;
+        web_user_plan_interval: string;
+        web_user_subscription_status: import("../../entities/web-user.entity").SubscriptionStatus;
+        web_user_trial_end_at: Date;
+        web_user_plan_end_at: Date;
+        web_user_credits_remaining: number;
+        web_user_text_credits: number;
+        web_user_image_credits: number;
+        web_user_video_credits: number;
+        web_user_landing_credits: number;
+        web_user_credits_reset_at: Date;
+        web_user_payment_provider: string;
+    };
+    private createReferralCode;
+    private applyCreditResetIfNeeded;
+}
