@@ -10,9 +10,17 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
   app.enableCors({
-    origin: (process.env.ALLOWED_ORIGINS || '').split(','),
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, n8n server-side)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error(`CORS: ${origin} not allowed`));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -30,7 +38,8 @@ async function bootstrap() {
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-subdomain cookies
+        domain: process.env.NODE_ENV === 'production' ? '.omar-software.com' : undefined,
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       },
     }),
