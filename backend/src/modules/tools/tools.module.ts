@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ToolsService } from './tools.service';
-import { HtmlToImageController } from './html-to-image.controller';
 import { CreativeJob } from '../../entities/creative-job.entity';
 import { WebMultiProduct } from '../../entities/web-multi-product.entity';
 import { WebDesignEditRequest } from '../../entities/web-design-edit-request.entity';
@@ -16,7 +15,6 @@ import { AiModule } from '../ai/ai.module';
     TypeOrmModule.forFeature([CreativeJob, WebMultiProduct, WebDesignEditRequest, WebLandingPage, WebUser, WebUserClient, Client]),
     AiModule,
   ],
-  controllers: [HtmlToImageController],
   providers: [ToolsService],
   exports: [ToolsService],
 })
