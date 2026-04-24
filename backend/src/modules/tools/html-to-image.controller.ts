@@ -1,7 +1,8 @@
 import { Controller, Post, Body, UseGuards, BadRequestException, Logger } from '@nestjs/common';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { R2Service } from '../../common/services/r2.service';
-import * as puppeteer from 'puppeteer-core';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const puppeteer = require('puppeteer-core') as typeof import('puppeteer-core');
 
 @Controller('tools/html-to-image')
 @UseGuards(ApiKeyGuard)
