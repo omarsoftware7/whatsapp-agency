@@ -1,12 +1,15 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import * as session from 'express-session';
 import * as connectPgSimple from 'connect-pg-simple';
 import { Pool } from 'pg';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log'],
+  });
+  const logger = new Logger('Bootstrap');
 
   app.setGlobalPrefix('api');
 
@@ -24,6 +27,23 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  // Clean request logging
+  const reqLogger = new Logger('HTTP');
+  app.use((req: any, res: any, next: any) => {
+    const { method, originalUrl } = req;
+    const start = Date.now();
+    res.on('finish', () => {
+      const ms = Date.now() - start;
+      const status: number = res.statusCode;
+      if (status >= 400) {
+        reqLogger.warn(`${method} ${originalUrl} ${status} +${ms}ms`);
+      } else {
+        reqLogger.log(`${method} ${originalUrl} ${status} +${ms}ms`);
+      }
+    });
+    next();
+  });
 
   const PgSession = connectPgSimple(session);
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false });
@@ -47,10 +67,10 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Launcho API running on port ${port}`);
+  logger.log(`Launcho API running on port ${port}`);
 }
 
 bootstrap().catch((err) => {
-  console.error('Bootstrap failed:', err);
+  new Logger('Bootstrap').error('Startup failed', err?.stack ?? err);
   process.exit(1);
 });
