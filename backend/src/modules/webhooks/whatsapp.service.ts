@@ -530,8 +530,10 @@ export class WhatsappService {
   async getClientInfo(clientId: number) {
     const client = await this.clientRepo.findOne({ where: { id: clientId } });
     if (!client) throw new Error('Client not found');
-    const baseUrl = this.config.get('API_BASE_URL', '');
-    const logoUrl = client.logo_filename ? `${baseUrl}/uploads/logos/${client.logo_filename}` : null;
+    const logoRaw = client.logo_filename ?? '';
+    const logoUrl = logoRaw
+      ? logoRaw.startsWith('http') ? logoRaw : `${this.config.get('API_BASE_URL', '')}/api/files/logos/${logoRaw}`
+      : null;
     const brandAssets = {
       logo_url: logoUrl,
       primary_color: client.primary_color,
