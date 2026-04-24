@@ -1,0 +1,37 @@
+import { Repository } from 'typeorm';
+import { CreativeJob } from '../../entities/creative-job.entity';
+import { WebMultiProduct } from '../../entities/web-multi-product.entity';
+import { WebDesignEditRequest } from '../../entities/web-design-edit-request.entity';
+import { WebLandingPage } from '../../entities/web-landing-page.entity';
+import { WebUser } from '../../entities/web-user.entity';
+import { WebUserClient } from '../../entities/web-user-client.entity';
+import { Client } from '../../entities/client.entity';
+import { GeminiService } from '../ai/gemini.service';
+import { KieService } from '../ai/kie.service';
+export declare class ToolsService {
+    private jobRepo;
+    private productRepo;
+    private editRepo;
+    private landingRepo;
+    private userRepo;
+    private wucRepo;
+    private clientRepo;
+    private readonly gemini;
+    private readonly kie;
+    private readonly logger;
+    private readonly uploadsDir;
+    constructor(jobRepo: Repository<CreativeJob>, productRepo: Repository<WebMultiProduct>, editRepo: Repository<WebDesignEditRequest>, landingRepo: Repository<WebLandingPage>, userRepo: Repository<WebUser>, wucRepo: Repository<WebUserClient>, clientRepo: Repository<Client>, gemini: GeminiService, kie: KieService);
+    dispatchJob(jobId: number): Promise<void>;
+    dispatchEditDesign(jobId: number, editId: number, userEdit: string, imageUrl: string, editMode: string): Promise<void>;
+    dispatchGenerateLandingPage(landingPageId: number): Promise<void>;
+    private runGenerateDesign;
+    private runGenerateVideo;
+    private runGenerateMultiVariants;
+    private runGenerateAdCopy;
+    private runEditDesign;
+    private runGenerateLandingPage;
+    private buildDesignPrompt;
+    private lock;
+    private unlock;
+    private failJob;
+}

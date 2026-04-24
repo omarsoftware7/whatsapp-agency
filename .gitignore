@@ -1,21 +1,22 @@
-# Secrets
-config.php
-.env
-.env.*
-
-# Runtime / user uploads (adjust if you need to keep them)
+# Only backend/ and frontend/ belong in this repo
+api/
+ui/
+assets/
 uploads/
 storage/
-storage/sessions/
-webhook_debug.txt
-error_log
+docs/
 _docs/
-.htaccess
+getadly/
+*.php
+*.log
+*.htaccess*
+CODEBASE_ANALYSIS.md
+config.php
+client_logo.png
+webhook_debug.txt
+site.webmanifest
+*.webmanifest
 
-# OS junk
-.DS_Store
-__MACOSX/
-
-# If you add composer/node later
-vendor/
+# Node
 node_modules/
+dist/

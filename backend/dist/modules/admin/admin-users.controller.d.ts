@@ -1,0 +1,44 @@
+import { AdminService } from './admin.service';
+export declare class AdminUsersController {
+    private readonly admin;
+    constructor(admin: AdminService);
+    list(): Promise<{
+        total_revenue: number;
+        referral_count: number;
+        id: number;
+        email: string;
+        password_hash: string;
+        google_id: string;
+        first_name: string;
+        last_name: string;
+        avatar_url: string;
+        theme_mode: string;
+        account_type: string;
+        plan_tier: import("../../entities/web-user.entity").PlanTier;
+        subscription_status: import("../../entities/web-user.entity").SubscriptionStatus;
+        trial_end_at: Date;
+        plan_end_at: Date;
+        plan_interval: string;
+        credits_remaining: number;
+        text_credits_remaining: number;
+        image_credits_remaining: number;
+        video_credits_remaining: number;
+        landing_credits_remaining: number;
+        credits_reset_at: Date;
+        paypal_subscription_id: string;
+        payment_provider: string;
+        sumit_customer_id: string;
+        sumit_recurring_id: string;
+        payment_last4: string;
+        subscription_started_at: Date;
+        last_login_at: Date;
+        role: string;
+        max_brands: number;
+        is_active: boolean;
+        created_at: Date;
+        updated_at: Date;
+        brandLinks: import("../../entities/web-user-client.entity").WebUserClient[];
+    }[]>;
+    create(body: any): Promise<import("../../entities/web-user.entity").WebUser>;
+    update(id: number, body: any): Promise<import("../../entities/web-user.entity").WebUser | null>;
+}
