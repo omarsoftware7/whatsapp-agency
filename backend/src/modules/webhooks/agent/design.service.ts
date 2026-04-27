@@ -291,8 +291,8 @@ export class DesignService {
 
   private buildLogoUrl(client: Client): string | null {
     if (!client.logo_filename) return null;
-    const r2 = this.config.get<string>('R2_PUBLIC_URL', '');
-    if (r2) return `${r2}/logos/${client.logo_filename}`;
+    // Always use API URL so toBase64() reads the file from disk directly
+    // (bypasses ApiKeyGuard; logos are saved locally during onboarding)
     const apiBase = this.config.get<string>('API_BASE_URL', '');
     return `${apiBase}/api/files/logos/${client.logo_filename}`;
   }
