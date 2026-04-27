@@ -82,9 +82,18 @@ export class OrchestratorService {
       const from: string = msg.from ?? '';
       const msgType: string = msg.type ?? 'text';
       const text: string = msg.text?.body?.trim() ?? '';
+      const name: string = value?.contacts?.[0]?.profile?.name ?? '(no name)';
 
       // Ignore group messages (from contains @g.us)
       if (from.includes('@')) return;
+
+      // ── Incoming message log ─────────────────────────────────────────────
+      const preview =
+        msgType === 'text' ? `"${text}"` :
+        msgType === 'image' ? `[image${msg.image?.caption ? ` | caption: "${msg.image.caption}"` : ''}]` :
+        `[${msgType}]`;
+
+      this.logger.log(`📨 INCOMING | +${from} | ${name} | ${preview}`);
 
       await this.process(from, text, msgType, msg, value);
     } catch (err) {
@@ -108,6 +117,7 @@ export class OrchestratorService {
       client = await this.clientRepo.save(
         this.clientRepo.create({ phone_number: from, whatsapp_name: name }),
       );
+      this.logger.log(`🆕 NEW CLIENT | +${from} | ${name}`);
       await this.log(client.id, null, 'client_created', { phone: from });
       await this.startOnboarding(client);
       return;
@@ -117,6 +127,7 @@ export class OrchestratorService {
 
     // ── Onboarding ────────────────────────────────────────────────────────
     if (!client.onboarding_complete) {
+      this.logger.log(`🔧 ONBOARDING | +${from} | step: ${client.onboarding_step}`);
       await this.handleOnboarding(client, text, msgType, msg);
       return;
     }
@@ -124,6 +135,7 @@ export class OrchestratorService {
     // ── Credits check ─────────────────────────────────────────────────────
     const credits = (client.trial_credits ?? 0) + (client.monthly_credits ?? 0);
     if (credits <= 0 && client.subscription_status !== 'active') {
+      this.logger.warn(`💳 NO CREDITS | +${from} | client #${client.id}`);
       await this.sender.sendText(from,
         '⚠️ نفدت رصيدك من التصاميم!\n\nيرجى الترقية للمتابعة.\nتواصل معنا لمعرفة خططنا.');
       return;
@@ -133,6 +145,12 @@ export class OrchestratorService {
     const activeJob = await this.getActiveJob(client.id);
     const stage = activeJob?.current_stage ?? 'show_menu';
     const intent = await this.intentSvc.classify(text, msgType, stage);
+
+    this.logger.log(
+      `🧠 INTENT | +${from} | stage: ${stage} | intent: ${intent.intent}` +
+      (intent.menuChoice ? ` (choice: ${intent.menuChoice})` : '') +
+      ` | confidence: ${intent.confidence}`,
+    );
 
     // ── Global commands ───────────────────────────────────────────────────
     if (intent.intent === 'COMMAND_ABORT') {
@@ -444,12 +462,14 @@ export class OrchestratorService {
       processing_lock_at: new Date(),
       user_message: userText || job.user_message,
     });
+    this.logger.log(`🎨 DESIGN START | job #${job.id} | +${from} | brief: "${userText?.slice(0, 80)}"`);
     await this.log(client.id, job.id, 'design_generation_started', {});
 
     try {
       const result = await this.designSvc.generate(client, job, userText);
 
       if (!result.success || !result.imageBuffer) {
+        this.logger.error(`🎨 DESIGN FAILED | job #${job.id} | ${result.error}`);
         await this.jobRepo.update(job.id, {
           processing_lock: false,
           current_stage: 'await_user_input',
@@ -479,6 +499,7 @@ export class OrchestratorService {
           '🎨 هذا هو تصميمك!\n\nأرسل *نعم* للموافقة والمتابعة\nأو صف التغييرات التي تريدها');
       }
 
+      this.logger.log(`✅ DESIGN DONE | job #${job.id} | url: ${variationUrl || '(buffer only)'}`);
       await this.log(client.id, job.id, 'design_generated', { url: variationUrl });
     } catch (err) {
       await this.jobRepo.update(job.id, {
