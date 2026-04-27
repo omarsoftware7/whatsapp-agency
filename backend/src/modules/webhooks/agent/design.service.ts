@@ -27,21 +27,23 @@ export class DesignService {
       const prompt = this.buildPrompt(client, job, userText);
 
       const res = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`,
         {
-          instances: [{ prompt }],
-          parameters: { sampleCount: 1, aspectRatio: '1:1' },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ['IMAGE'] },
         },
-        { timeout: 60_000 },
+        { timeout: 90_000 },
       );
 
-      const prediction = res.data?.predictions?.[0];
-      if (!prediction?.bytesBase64Encoded) {
-        this.logger.error('Gemini Imagen response:', JSON.stringify(res.data));
-        return { success: false, error: 'No image data returned from Gemini Imagen' };
+      const parts: any[] = res.data?.candidates?.[0]?.content?.parts ?? [];
+      const imagePart = parts.find((p: any) => p.inlineData?.mimeType?.startsWith('image/'));
+
+      if (!imagePart?.inlineData?.data) {
+        this.logger.error('Gemini image response missing data:', JSON.stringify(res.data).slice(0, 300));
+        return { success: false, error: 'No image data returned from Gemini' };
       }
 
-      const buffer = Buffer.from(prediction.bytesBase64Encoded, 'base64');
+      const buffer = Buffer.from(imagePart.inlineData.data, 'base64');
       const savedUrl = this.saveLocally(buffer, job.id);
 
       return { success: true, imageBuffer: buffer, imageUrl: savedUrl ?? undefined };
