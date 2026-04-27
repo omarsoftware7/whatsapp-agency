@@ -266,10 +266,25 @@ export class DesignService {
 
   private async toBase64(url: string): Promise<string | null> {
     try {
+      // Our own files API requires an API key — read from disk directly instead
+      const apiBase = this.config.get<string>('API_BASE_URL', '');
+      const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
+
+      if (apiBase && url.startsWith(`${apiBase}/api/files/`)) {
+        const relativePath = url.replace(`${apiBase}/api/files/`, '');
+        const fullPath = path.join(uploadsDir, relativePath);
+        if (fs.existsSync(fullPath)) {
+          this.logger.log(`📂 Reading from disk: ${relativePath}`);
+          return fs.readFileSync(fullPath).toString('base64');
+        }
+        this.logger.warn(`📂 File not on disk: ${fullPath} — falling back to HTTP`);
+      }
+
+      // Public URL (R2, CDN, etc.) — download directly
       const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 20_000 });
       return Buffer.from(res.data).toString('base64');
     } catch (err) {
-      this.logger.warn(`toBase64 failed for ${url}: ${err.message}`);
+      this.logger.error(`❌ toBase64 FAILED for ${url}: ${err.message}`);
       return null;
     }
   }
