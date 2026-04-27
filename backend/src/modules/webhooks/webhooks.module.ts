@@ -14,6 +14,11 @@ import { Client } from '../../entities/client.entity';
 import { CreativeJob } from '../../entities/creative-job.entity';
 import { ActivityLog } from '../../entities/activity-log.entity';
 import { ApiKey } from '../../entities/api-key.entity';
+import { IntentService } from './agent/intent.service';
+import { WhatsAppSenderService } from './agent/whatsapp-sender.service';
+import { DesignService } from './agent/design.service';
+import { AdCopyService } from './agent/ad-copy.service';
+import { OrchestratorService } from './agent/orchestrator.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Client, CreativeJob, ActivityLog, ApiKey])],
@@ -28,7 +33,15 @@ import { ApiKey } from '../../entities/api-key.entity';
     ClientInfoController,
     FilesController,
   ],
-  providers: [WhatsappService, ApiKeyGuard],
+  providers: [
+    WhatsappService,
+    ApiKeyGuard,
+    IntentService,
+    WhatsAppSenderService,
+    DesignService,
+    AdCopyService,
+    OrchestratorService,
+  ],
   exports: [WhatsappService],
 })
 export class WebhooksModule {}

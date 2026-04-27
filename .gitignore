@@ -20,3 +20,6 @@ site.webmanifest
 # Node
 node_modules/
 dist/
+.env
+.env.local
+.env.production
