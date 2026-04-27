@@ -249,7 +249,7 @@ export default function Dashboard() {
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-700 mb-3">Designs</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {selectedJob.design_variations.map((url, i) => (
+                  {(selectedJob.design_variations ?? []).map((url, i) => (
                     <div key={i} className="relative group">
                       {selectedJob.media_type === 'video' ? (
                         <video src={url} controls className="w-full rounded-xl" />
