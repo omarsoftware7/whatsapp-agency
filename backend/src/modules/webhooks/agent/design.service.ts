@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { R2Service } from '../../../common/services/r2.service';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -93,7 +94,10 @@ T – Tools:
 export class DesignService {
   private readonly logger = new Logger(DesignService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly r2: R2Service,
+  ) {}
 
   async generate(client: Client, job: CreativeJob, userText: string): Promise<DesignResult> {
     const geminiKey = this.config.get<string>('GEMINI_API_KEY');
@@ -185,7 +189,7 @@ export class DesignService {
       }
 
       const buffer = Buffer.from(b64, 'base64');
-      const savedUrl = this.saveLocally(buffer, job.id);
+      const savedUrl = await this.saveImage(buffer, job.id);
 
       return { success: true, imageBuffer: buffer, imageUrl: savedUrl ?? undefined };
     } catch (err) {
@@ -266,9 +270,14 @@ export class DesignService {
 
   private async toBase64(url: string): Promise<string | null> {
     try {
-      // Our own files API requires an API key — read from disk directly instead
+      // Safety: detect double-URL (e.g. https://api.../api/files/https://pub-r2.dev/...)
       const apiBase = this.config.get<string>('API_BASE_URL', '');
       const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
+      const innerHttpIdx = url.indexOf('https://', 9);
+      if (innerHttpIdx > 0 && url.startsWith(apiBase)) {
+        url = url.substring(innerHttpIdx);
+        this.logger.warn(`🔧 Fixed double-URL → ${url}`);
+      }
 
       if (apiBase && url.startsWith(`${apiBase}/api/files/`)) {
         const relativePath = url.replace(`${apiBase}/api/files/`, '');
@@ -290,11 +299,13 @@ export class DesignService {
   }
 
   private buildLogoUrl(client: Client): string | null {
-    if (!client.logo_filename) return null;
-    // Always use API URL so toBase64() reads the file from disk directly
-    // (bypasses ApiKeyGuard; logos are saved locally during onboarding)
+    const filename = client.logo_filename;
+    if (!filename) return null;
+    this.logger.log(`🔍 logo_filename="${filename}"`);
+    // Full URL (R2 / CDN) — use directly
+    if (filename.startsWith('http://') || filename.startsWith('https://')) return filename;
     const apiBase = this.config.get<string>('API_BASE_URL', '');
-    return `${apiBase}/api/files/logos/${client.logo_filename}`;
+    return `${apiBase}/api/files/logos/${filename}`;
   }
 
   private buildBusinessInfo(client: Client): string {
@@ -308,15 +319,27 @@ export class DesignService {
     ].filter((l) => !l.endsWith(': ')).join('\n');
   }
 
-  private saveLocally(buffer: Buffer, jobId: number): string | null {
+  private async saveImage(buffer: Buffer, jobId: number): Promise<string | null> {
+    const filename = `design_${jobId}_${Date.now()}`;
+
+    // Upload to R2 if configured
+    if (this.r2.isConfigured()) {
+      try {
+        return await this.r2.uploadAsPng('generated', filename, buffer);
+      } catch (err) {
+        this.logger.warn(`R2 upload failed, falling back to disk: ${err.message}`);
+      }
+    }
+
+    // Fallback: local disk
     try {
       const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
       const apiBase = this.config.get<string>('API_BASE_URL', '');
       const dir = path.join(uploadsDir, 'generated');
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      const filename = `design_${jobId}_${Date.now()}.jpg`;
-      fs.writeFileSync(path.join(dir, filename), buffer);
-      return `${apiBase}/api/files/generated/${filename}`;
+      const localFile = `${filename}.jpg`;
+      fs.writeFileSync(path.join(dir, localFile), buffer);
+      return `${apiBase}/api/files/generated/${localFile}`;
     } catch (err) {
       this.logger.warn(`Failed to save design locally: ${err.message}`);
       return null;

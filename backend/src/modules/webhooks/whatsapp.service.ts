@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Client } from '../../entities/client.entity';
 import { CreativeJob } from '../../entities/creative-job.entity';
 import { ActivityLog } from '../../entities/activity-log.entity';
+import { R2Service } from '../../common/services/r2.service';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -27,6 +28,7 @@ export class WhatsappService {
     @InjectRepository(CreativeJob) private jobRepo: Repository<CreativeJob>,
     @InjectRepository(ActivityLog) private logRepo: Repository<ActivityLog>,
     private readonly config: ConfigService,
+    private readonly r2: R2Service,
   ) {}
 
   private async logActivity(clientId: number | null, jobId: number | null, eventType: string, data: any = {}) {
@@ -60,7 +62,7 @@ export class WhatsappService {
     mediaId: string,
     jobId: number | string,
     subdirHint: 'products' | 'logos' | 'generated' = 'products',
-    directUrl?: string,          // use if already available in the webhook payload
+    directUrl?: string,
     mimeTypeHint?: string,
   ): Promise<string | null> {
     const waToken = this.config.get('WA_ACCESS_TOKEN');
@@ -72,7 +74,6 @@ export class WhatsappService {
       let downloadUrl: string = directUrl ?? '';
       let mimeType: string = mimeTypeHint ?? 'image/jpeg';
 
-      // Only call Graph API if we don't already have the URL
       if (!downloadUrl) {
         const urlRes = await axios.get(`https://graph.facebook.com/${graphVersion}/${mediaId}`, {
           headers: { Authorization: `Bearer ${waToken}` },
@@ -89,6 +90,22 @@ export class WhatsappService {
         timeout: 30000,
       });
 
+      const data = Buffer.from(fileRes.data);
+
+      // ── Upload to R2 if configured ─────────────────────────────────────
+      if (this.r2.isConfigured()) {
+        const isImage = mimeType.startsWith('image/');
+        const baseName = `wa_${Date.now()}_${mediaId}`;
+        if (isImage) {
+          return await this.r2.uploadAsPng(subdirHint, baseName, data);
+        }
+        const extMap: Record<string, string> = { 'video/mp4': 'mp4', 'audio/ogg': 'ogg', 'audio/mpeg': 'mp3' };
+        const ext = extMap[mimeType] ?? 'bin';
+        const key = this.r2.buildKey(subdirHint, `${baseName}.${ext}`);
+        return await this.r2.upload(key, data, mimeType);
+      }
+
+      // ── Fallback: local disk ───────────────────────────────────────────
       const extMap: Record<string, string> = {
         'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png',
         'image/webp': 'webp', 'video/mp4': 'mp4', 'image/gif': 'gif',
@@ -96,11 +113,9 @@ export class WhatsappService {
       };
       const ext = extMap[mimeType] ?? 'jpg';
       const filename = `wa_${Date.now()}_${mediaId}.${ext}`;
-
       const saveDir = path.join(uploadsDir, subdirHint);
       if (!fs.existsSync(saveDir)) fs.mkdirSync(saveDir, { recursive: true });
-      fs.writeFileSync(path.join(saveDir, filename), Buffer.from(fileRes.data));
-
+      fs.writeFileSync(path.join(saveDir, filename), data);
       return `${baseUrl}/api/files/${subdirHint}/${filename}`;
     } catch (err) {
       this.logger.error(`Failed to download WhatsApp media ${mediaId}: ${err.message}`);
@@ -467,21 +482,33 @@ export class WhatsappService {
 
   // Onboarding methods
   async onboardingLogoUploaded(clientId: number, logoUrl: string, logoFilename: string) {
-    const uploadsDir = this.config.get('UPLOADS_DIR', './uploads');
-    const logoDir = path.join(uploadsDir, 'logos');
-    if (!fs.existsSync(logoDir)) fs.mkdirSync(logoDir, { recursive: true });
-
     const waToken = this.config.get('WA_ACCESS_TOKEN');
-    let savedFilename = logoFilename;
+    const uploadsDir = this.config.get('UPLOADS_DIR', './uploads');
+    let savedRef: string = logoFilename || `logo_${clientId}`;
+
     try {
       const fileRes = await axios.get(logoUrl, { headers: { Authorization: `Bearer ${waToken}` }, responseType: 'arraybuffer' });
-      savedFilename = logoFilename || `logo_${clientId}.png`;
-      fs.writeFileSync(path.join(logoDir, savedFilename), Buffer.from(fileRes.data));
-    } catch (_) {}
+      const data = Buffer.from(fileRes.data);
 
-    await this.clientRepo.update(clientId, { logo_filename: savedFilename, onboarding_step: 'describe_business' });
-    await this.logActivity(clientId, null, 'logo_uploaded', { filename: savedFilename });
-    return { status: 'logo_saved', client_id: clientId, logo_filename: savedFilename, next_step: 'analyze_logo_with_gpt5', gpt5_instructions: 'Analyze this logo image and extract: 1) Primary brand color (hex), 2) Secondary color (hex)' };
+      if (this.r2.isConfigured()) {
+        // Upload to R2 — store the full R2 URL as logo_filename
+        const baseName = logoFilename ? logoFilename.replace(/\.[^.]+$/, '') : `logo_${clientId}`;
+        savedRef = await this.r2.uploadAsPng('logos', baseName, data);
+      } else {
+        // Local disk fallback
+        const logoDir = path.join(uploadsDir, 'logos');
+        if (!fs.existsSync(logoDir)) fs.mkdirSync(logoDir, { recursive: true });
+        const localFile = logoFilename || `logo_${clientId}.png`;
+        fs.writeFileSync(path.join(logoDir, localFile), data);
+        savedRef = localFile;
+      }
+    } catch (err) {
+      this.logger.warn(`Logo upload failed: ${err.message}`);
+    }
+
+    await this.clientRepo.update(clientId, { logo_filename: savedRef, onboarding_step: 'describe_business' });
+    await this.logActivity(clientId, null, 'logo_uploaded', { logo_ref: savedRef });
+    return { status: 'logo_saved', client_id: clientId, logo_filename: savedRef, next_step: 'analyze_logo_with_gpt5', gpt5_instructions: 'Analyze this logo image and extract: 1) Primary brand color (hex), 2) Secondary color (hex)' };
   }
 
   async onboardingLogoAnalyzed(clientId: number, primaryColor: string, secondaryColor: string) {

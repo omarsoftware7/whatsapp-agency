@@ -19,6 +19,7 @@ import { WhatsAppSenderService } from './agent/whatsapp-sender.service';
 import { DesignService } from './agent/design.service';
 import { AdCopyService } from './agent/ad-copy.service';
 import { OrchestratorService } from './agent/orchestrator.service';
+import { R2Service } from '../../common/services/r2.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Client, CreativeJob, ActivityLog, ApiKey])],
@@ -41,7 +42,8 @@ import { OrchestratorService } from './agent/orchestrator.service';
     DesignService,
     AdCopyService,
     OrchestratorService,
+    R2Service,
   ],
-  exports: [WhatsappService],
+  exports: [WhatsappService, R2Service],
 })
 export class WebhooksModule {}
