@@ -19,6 +19,7 @@ import { WhatsAppSenderService } from './agent/whatsapp-sender.service';
 import { DesignService } from './agent/design.service';
 import { AdCopyService } from './agent/ad-copy.service';
 import { OrchestratorService } from './agent/orchestrator.service';
+import { InstagramPreviewService } from './agent/instagram-preview.service';
 import { R2Service } from '../../common/services/r2.service';
 
 @Module({
@@ -42,6 +43,7 @@ import { R2Service } from '../../common/services/r2.service';
     DesignService,
     AdCopyService,
     OrchestratorService,
+    InstagramPreviewService,
     R2Service,
   ],
   exports: [WhatsappService, R2Service],

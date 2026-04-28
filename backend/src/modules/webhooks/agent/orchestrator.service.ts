@@ -27,6 +27,7 @@ import { IntentService, IntentResult } from './intent.service';
 import { WhatsAppSenderService } from './whatsapp-sender.service';
 import { DesignService } from './design.service';
 import { AdCopyService } from './ad-copy.service';
+import { InstagramPreviewService } from './instagram-preview.service';
 import { WhatsappService } from '../whatsapp.service';
 import axios from 'axios';
 
@@ -64,6 +65,7 @@ export class OrchestratorService {
     private readonly sender: WhatsAppSenderService,
     private readonly designSvc: DesignService,
     private readonly adCopySvc: AdCopyService,
+    private readonly previewSvc: InstagramPreviewService,
     private readonly whatsappSvc: WhatsappService,
     private readonly config: ConfigService,
   ) {}
@@ -530,7 +532,6 @@ export class OrchestratorService {
     });
 
     try {
-      // Get the approved design URL to inform the copy
       const designUrl = fullJob.design_variations?.[fullJob.approved_design_index ?? 0];
       const copy = designUrl
         ? await this.adCopySvc.generateWithImageContext(client, fullJob, designUrl)
@@ -542,6 +543,24 @@ export class OrchestratorService {
         current_stage: 'await_copy_approval',
       });
 
+      // ── Send Instagram-style preview image ──────────────────────────────
+      if (designUrl) {
+        try {
+          const handle = (client.business_name ?? client.phone_number).replace(/\s+/g, '').toLowerCase();
+          const logoUrl = client.logo_filename?.startsWith('http') ? client.logo_filename : null;
+          const previewBuf = await this.previewSvc.create(designUrl, handle, copy.full_text, logoUrl);
+          if (previewBuf) {
+            const mediaId = await this.sender.uploadMedia(previewBuf, 'image/png', 'preview.png');
+            if (mediaId) {
+              await this.sender.sendImageByMediaId(from, mediaId);
+            }
+          }
+        } catch (err) {
+          this.logger.warn(`Preview image skipped: ${err.message}`);
+        }
+      }
+
+      // ── Send copy text for approval ─────────────────────────────────────
       await this.sender.sendText(from,
         `📝 هذا هو النص الإعلاني:\n\n` +
         `*${copy.headline}*\n\n${copy.body}\n\n${copy.cta}\n\n` +
