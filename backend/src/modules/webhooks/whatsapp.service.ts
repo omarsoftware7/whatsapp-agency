@@ -623,7 +623,14 @@ export class WhatsappService {
       .getOne();
     if (!data) throw new Error('Job not found');
     const client: Client = data.client;
-    if (!client.meta_tokens_valid || !client.meta_page_token) throw new Error('Meta tokens not configured');
+
+    // Client-level tokens take priority; fall back to env vars so a single
+    // Railway deployment works for testing without requiring per-client OAuth.
+    const pageToken    = client.meta_page_token    || this.config.get<string>('META_PAGE_TOKEN');
+    const pageId       = client.meta_page_id       || this.config.get<string>('META_PAGE_ID');
+    const igAccountId  = client.instagram_account_id || this.config.get<string>('META_INSTAGRAM_ACCOUNT_ID');
+
+    if (!pageToken || !pageId) throw new Error('Meta tokens not configured — set META_PAGE_TOKEN + META_PAGE_ID in Railway or connect via OAuth');
 
     const designs: string[] = data.design_variations ?? [];
     const approvedIndex = data.approved_design_index ?? 0;
@@ -631,9 +638,6 @@ export class WhatsappService {
     if (!imageUrl) throw new Error('No approved design found');
 
     const caption = this.formatAdCopyCaption(data.ad_copy ?? '');
-    const pageToken = client.meta_page_token;
-    const pageId = client.meta_page_id;
-    const igAccountId = client.instagram_account_id;
     const graphVersion = this.config.get('META_GRAPH_VERSION', 'v18.0');
     const graphBase = `https://graph.facebook.com/${graphVersion}`;
     const results: Record<string, any> = {};
