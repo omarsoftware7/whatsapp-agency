@@ -5,14 +5,14 @@ import * as path from 'path';
 import axios from 'axios';
 import satori from 'satori';
 
-const W      = 800;
-const IMG_H  = 720;
-const TOP_H  = 110;
-const BTM_H  = 340;
+const W       = 800;
+const IMG_H   = 720;
+const TOP_H   = 110;
+const BTM_H   = 340;
 const TOTAL_H = TOP_H + IMG_H + BTM_H;
 
 // Each font MUST have a unique name — same name → satori picks only the first
-// at that weight/style and never tries the others for missing glyphs.
+// at that weight/style and never falls through to others for missing glyphs.
 function loadFonts() {
   const dir = path.join(__dirname, '..', '..', '..', 'fonts');
   return [
@@ -31,6 +31,17 @@ function captionFontFamily(t: string) {
   if (hasHebrew(t)) return '"NotoHebrew", "NotoSans", sans-serif';
   return '"NotoSans", sans-serif';
 }
+
+// Noto fonts have no emoji glyphs — strip them so they don't render as boxes.
+function stripEmoji(text: string): string {
+  return text
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')  // supplementary emoji
+    .replace(/[\u{2600}-\u{27BF}]/gu, '')     // misc symbols + dingbats
+    .replace(/[\uFE0F]/g, '')                  // variation selector-16
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 const LATIN_FF = '"NotoSans", sans-serif';
 
 async function toDataUri(buf: Buffer, mime = 'image/jpeg') {
@@ -56,8 +67,7 @@ const ICON_COMMENT  = 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 
 const ICON_SEND     = 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z';
 const ICON_BOOKMARK = 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z';
 
-const AV = 54;   // outer avatar diameter
-const AVI = 48;  // inner logo diameter (3px ring on each side)
+const AV = 60; // avatar diameter (no border ring)
 
 @Injectable()
 export class InstagramPreviewService {
@@ -90,10 +100,10 @@ export class InstagramPreviewService {
         try {
           const logoBuf = await this.fetch(logoUrl);
           if (logoBuf) {
-            // flatten() removes transparency → gradient ring won't bleed through
+            // flatten() removes transparency so no background bleeds through
             const logoSmall = await sharp(logoBuf)
-              .resize(AVI, AVI, { fit: 'cover' })
-              .flatten({ background: '#000000' })
+              .resize(AV, AV, { fit: 'cover' })
+              .flatten({ background: '#1a1a1a' })
               .jpeg({ quality: 95 })
               .toBuffer();
             logoUri = await toDataUri(logoSmall, 'image/jpeg');
@@ -101,11 +111,11 @@ export class InstagramPreviewService {
         } catch { /* ignore */ }
       }
 
-      const rtl        = hasRTL(caption);
-      const captionFF  = captionFontFamily(caption);
-      // Strip newlines to avoid satori rendering them as gaps; replace with space
-      const captionClean = caption.replace(/\n+/g, ' ').trim();
-      const captionShort = captionClean.length > 150 ? captionClean.slice(0, 147) + '…' : captionClean;
+      const rtl       = hasRTL(caption);
+      const captionFF = captionFontFamily(caption);
+      const raw       = caption.replace(/\n+/g, ' ').trim();
+      const clean     = stripEmoji(raw);
+      const captionShort = clean.length > 160 ? clean.slice(0, 157) + '…' : clean;
 
       const el: any = {
         type: 'div',
@@ -128,29 +138,26 @@ export class InstagramPreviewService {
                   borderBottom: '1px solid #1a1a1a',
                 },
                 children: [
-                  // Avatar — gradient ring + logo (no transparency leak)
-                  {
+                  // Simple circular avatar — no gradient ring
+                  logoUri ? {
                     type: 'div',
                     props: {
                       style: {
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: AV, height: AV, borderRadius: AV / 2,
-                        background: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#bc1888)',
-                        padding: 3, marginRight: 14, flexShrink: 0,
+                        display: 'flex', width: AV, height: AV,
+                        borderRadius: AV / 2, overflow: 'hidden',
+                        marginRight: 14, flexShrink: 0,
                       },
-                      children: [{
-                        type: 'div',
-                        props: {
-                          style: {
-                            display: 'flex', width: AVI, height: AVI,
-                            borderRadius: AVI / 2, overflow: 'hidden',
-                            backgroundColor: '#000',
-                          },
-                          children: logoUri
-                            ? [{ type: 'img', props: { src: logoUri, width: AVI, height: AVI } }]
-                            : [],
-                        },
-                      }],
+                      children: [{ type: 'img', props: { src: logoUri, width: AV, height: AV } }],
+                    },
+                  } : {
+                    // Placeholder circle when no logo
+                    type: 'div',
+                    props: {
+                      style: {
+                        display: 'flex', width: AV, height: AV,
+                        borderRadius: AV / 2, backgroundColor: '#2a2a2a',
+                        marginRight: 14, flexShrink: 0,
+                      },
                     },
                   },
                   // @handle
@@ -161,7 +168,7 @@ export class InstagramPreviewService {
                       children: `@${handle}`,
                     },
                   },
-                  // Three-dot menu
+                  // Three-dot menu (SVG circles)
                   {
                     type: 'svg',
                     props: {
@@ -220,7 +227,7 @@ export class InstagramPreviewService {
                     },
                   },
 
-                  // Caption block — two sub-rows stacked, aligned to the reading edge
+                  // Caption — handle + text, stacked for clean RTL handling
                   {
                     type: 'div',
                     props: {
@@ -230,18 +237,13 @@ export class InstagramPreviewService {
                         width: '100%', gap: 2,
                       },
                       children: [
-                        // Bold @handle on its own line
                         {
                           type: 'div',
                           props: {
-                            style: {
-                              color: '#ffffff', fontWeight: 700,
-                              fontSize: 23, fontFamily: LATIN_FF,
-                            },
+                            style: { color: '#ffffff', fontWeight: 700, fontSize: 23, fontFamily: LATIN_FF },
                             children: `@${handle}`,
                           },
                         },
-                        // Caption text — direction controls HarfBuzz shaping + wrapping
                         {
                           type: 'div',
                           props: {
