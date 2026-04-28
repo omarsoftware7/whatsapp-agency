@@ -18,6 +18,7 @@ export class AdCopyService {
   constructor(private readonly config: ConfigService) {}
 
   async generate(client: Client, job: CreativeJob): Promise<AdCopyResult> {
+    if (this.config.get<string>('MOCK_AI') === 'true') return this.mockCopy();
     const apiKey = this.config.get<string>('GEMINI_API_KEY');
     if (!apiKey) return this.fallback();
 
@@ -94,6 +95,7 @@ Respond with ONLY valid JSON (no markdown):
     job: CreativeJob,
     imageUrl: string,
   ): Promise<AdCopyResult> {
+    if (this.config.get<string>('MOCK_AI') === 'true') return this.mockCopy();
     const apiKey = this.config.get<string>('GEMINI_API_KEY');
     if (!apiKey) return this.generate(client, job);
 
@@ -158,6 +160,16 @@ Respond with ONLY valid JSON:
       body: 'تواصل معنا للحصول على أفضل العروض.',
       cta: '📞 اتصل بنا الآن',
       full_text: '✨ عرض مميز!\n\nتواصل معنا للحصول على أفضل العروض.\n\n📞 اتصل بنا الآن',
+    };
+  }
+
+  private mockCopy(): AdCopyResult {
+    this.logger.warn('⚠️  MOCK_AI enabled — returning placeholder ad copy');
+    return {
+      headline: '🧪 [MOCK] عنوان الإعلان هنا',
+      body: 'هذا نص إعلاني تجريبي. سيتم استبداله بنص حقيقي من الذكاء الاصطناعي في الإنتاج.',
+      cta: '📲 تواصل معنا الآن!',
+      full_text: '🧪 [MOCK] عنوان الإعلان هنا\n\nهذا نص إعلاني تجريبي. سيتم استبداله بنص حقيقي من الذكاء الاصطناعي في الإنتاج.\n\n📲 تواصل معنا الآن!',
     };
   }
 }

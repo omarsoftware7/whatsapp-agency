@@ -100,6 +100,10 @@ export class DesignService {
   ) {}
 
   async generate(client: Client, job: CreativeJob, userText: string): Promise<DesignResult> {
+    if (this.config.get<string>('MOCK_AI') === 'true') {
+      return this.mockDesign(job);
+    }
+
     const geminiKey = this.config.get<string>('GEMINI_API_KEY');
     const openaiKey = this.config.get<string>('OPENAI_API_KEY');
 
@@ -348,5 +352,33 @@ export class DesignService {
 
   private parseProductImages(job: CreativeJob): string[] {
     try { return JSON.parse(job.product_images ?? '[]'); } catch { return []; }
+  }
+
+  private async mockDesign(job: CreativeJob): Promise<DesignResult> {
+    this.logger.warn(`⚠️  MOCK_AI enabled — returning placeholder design for job #${job.id}`);
+    // 1080×1080 solid gradient PNG via sharp
+    const { default: sharpLib } = await import('sharp') as any;
+    const buffer: Buffer = await sharpLib({
+      create: { width: 1080, height: 1080, channels: 3, background: { r: 30, g: 30, b: 60 } },
+    })
+      .composite([{
+        input: Buffer.from(
+          `<svg width="1080" height="1080" xmlns="http://www.w3.org/2000/svg">` +
+          `<rect width="1080" height="1080" fill="url(#g)"/>` +
+          `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+          `<stop offset="0%" stop-color="#1a1a3e"/><stop offset="100%" stop-color="#4a2060"/>` +
+          `</linearGradient></defs>` +
+          `<text x="540" y="500" text-anchor="middle" fill="#ffffff" font-size="72" font-family="Arial">` +
+          `🎨 MOCK DESIGN</text>` +
+          `<text x="540" y="590" text-anchor="middle" fill="#aaaaaa" font-size="40" font-family="Arial">` +
+          `Job #${job.id} — MOCK_AI=true</text>` +
+          `</svg>`,
+        ),
+      }])
+      .png()
+      .toBuffer();
+
+    const savedUrl = await this.saveImage(buffer, job.id);
+    return { success: true, imageBuffer: buffer, imageUrl: savedUrl ?? undefined };
   }
 }
