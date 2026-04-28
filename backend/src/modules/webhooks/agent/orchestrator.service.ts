@@ -470,7 +470,7 @@ export class OrchestratorService {
     try {
       const result = await this.designSvc.generate(client, job, userText);
 
-      if (!result.success || !result.imageBuffer) {
+      if (!result.success || (!result.imageBuffer && !result.imageUrl)) {
         this.logger.error(`🎨 DESIGN FAILED | job #${job.id} | ${result.error}`);
         await this.jobRepo.update(job.id, {
           processing_lock: false,
@@ -482,11 +482,14 @@ export class OrchestratorService {
         return;
       }
 
-      // Upload image to WhatsApp
-      const mediaId = await this.sender.uploadMedia(result.imageBuffer, 'image/jpeg', `design_${job.id}.jpg`);
+      // Upload buffer to WhatsApp if we have one, otherwise send by URL
+      const variationUrl = result.imageUrl ?? '';
+      let mediaId: string | null = null;
+      if (result.imageBuffer) {
+        mediaId = await this.sender.uploadMedia(result.imageBuffer, 'image/jpeg', `design_${job.id}.jpg`);
+      }
 
       // Save design
-      const variationUrl = result.imageUrl ?? '';
       await this.whatsappSvc.saveDesign(job.id, [variationUrl], userText, 'image');
 
       // Release lock
