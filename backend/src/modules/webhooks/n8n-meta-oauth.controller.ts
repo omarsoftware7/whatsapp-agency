@@ -64,7 +64,7 @@ export class MetaOAuthCompleteController {
     const graphVer   = this.config.get('META_GRAPH_VERSION', 'v21.0');
     const callbackUrl = `${baseUrl}/api/meta-oauth-complete?action=callback`;
 
-    // ── STEP 1: Show connect page ────────────────────────────────────────────
+    // ── STEP 1: Redirect directly to Facebook OAuth ──────────────────────────
     if (action === 'start') {
       if (!clientIdStr) return res.status(400).send('client_id required');
 
@@ -78,6 +78,7 @@ export class MetaOAuthCompleteController {
         'business_management',
       ].join(',');
 
+      // Encode client_id in state only — never expose it in the URL shown to users
       const stateParam = Buffer.from(JSON.stringify({ client_id: clientIdStr, ts: Date.now() })).toString('base64');
 
       const oauthUrl = `https://www.facebook.com/${graphVer}/dialog/oauth?` + new URLSearchParams({
@@ -88,29 +89,7 @@ export class MetaOAuthCompleteController {
         response_type: 'code',
       }).toString();
 
-      return res.send(`
-        <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1"/>
-          <style>
-            body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:40px;text-align:center;background:#f6f7fb;margin:0}
-            .card{background:#fff;border-radius:16px;padding:32px;max-width:520px;margin:40px auto;box-shadow:0 12px 40px rgba(0,0,0,.12)}
-            h1{margin:0 0 10px;color:#1f2937;font-size:22px}
-            p{margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.4}
-            a.btn{display:inline-block;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:700;background:#2563eb;color:#fff;font-size:16px}
-            .meta{margin-top:18px;color:#9ca3af;font-size:12px}
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <h1>Connect your Facebook Page</h1>
-            <p>Click below to authorize publishing to Facebook &amp; Instagram.</p>
-            <a class="btn" href="${oauthUrl}">Finish Integration</a>
-            <div class="meta">Client ID: ${clientIdStr}</div>
-          </div>
-        </body>
-        </html>
-      `);
+      return res.redirect(oauthUrl);
     }
 
     // ── STEP 2: OAuth callback — exchange code, save to DB ───────────────────
