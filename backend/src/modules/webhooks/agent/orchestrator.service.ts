@@ -588,24 +588,46 @@ export class OrchestratorService {
   }
 
   private async doPublish(client: Client, job: CreativeJob, phone: string): Promise<void> {
+    // ── Step 1: Auth check (mirrors n8n "Check Meta Auth Status" node) ────────
+    // Consider connected if client has DB tokens OR env vars supply them.
+    const metaStatus = await this.whatsappSvc.getMetaStatus(client.id);
+    const hasEnvCreds = !!(
+      (this.config.get('META_PAGE_TOKEN') || this.config.get('WA_ACCESS_TOKEN')) &&
+      (client.meta_page_id || this.config.get('META_PAGE_ID'))
+    );
+    const isConnected = (metaStatus.connected === 1 || hasEnvCreds) && !metaStatus.expires_soon;
+
+    if (!isConnected) {
+      // Not authorized → send OAuth link, put job back so user can retry after connecting
+      await this.sendMetaAuthLink(client.id, phone);
+      await this.jobRepo.update(job.id, { current_stage: 'await_publish_approval' });
+      return;
+    }
+
+    // ── Step 2: Publish ───────────────────────────────────────────────────────
     try {
       const result = await this.whatsappSvc.publishForClient(job.id);
       await this.jobRepo.update(job.id, { current_stage: 'completed', completed_at: new Date() });
 
+      const fb  = result?.results?.facebook  ?? {};
+      const ig  = result?.results?.instagram ?? {};
+
       if (result?.status === 'published') {
-        const fbUrl = result.results?.facebook?.post_id
-          ? `https://facebook.com/${result.results.facebook.post_id}` : null;
-        const igUrl = result.results?.instagram?.permalink ?? null;
-
         let msg = '🎉 *تم النشر بنجاح!*\n\n';
-        if (fbUrl) msg += `✅ فيسبوك: ${fbUrl}\n`;
-        if (igUrl) msg += `✅ إنستغرام: ${igUrl}\n`;
+        if (fb.success && fb.post_id) msg += `✅ فيسبوك: https://facebook.com/${fb.post_id}\n`;
+        if (ig.success && ig.permalink)  msg += `✅ إنستغرام: ${ig.permalink}\n`;
         msg += '\nإعلانك الآن يصل إلى عملائك! 🚀\n\n' + this.menuText();
-
         await this.sender.sendText(phone, msg);
+
       } else if (result?.status === 'partial_failure') {
-        await this.sender.sendText(phone,
-          '⚠️ *نجاح جزئي*\n\nتم النشر على بعض المنصات فقط. تحقق من لوحة التحكم للتفاصيل.\n\n' + this.menuText());
+        let msg = '⚠️ *نجاح جزئي*\n\n';
+        if (fb.success && fb.post_id)   msg += `✅ فيسبوك: https://facebook.com/${fb.post_id}\n`;
+        else if (fb.error)              msg += `❌ فيسبوك: ${fb.error}\n`;
+        if (ig.success && ig.permalink) msg += `✅ إنستغرام: ${ig.permalink}\n`;
+        else if (ig.error)              msg += `❌ إنستغرام: ${ig.error}\n`;
+        msg += '\n' + this.menuText();
+        await this.sender.sendText(phone, msg);
+
       } else {
         await this.sender.sendText(phone,
           '❌ فشل النشر. يرجى التحقق من صلاحيات فيسبوك أو التواصل مع الدعم.\n\n' + this.menuText());
@@ -613,10 +635,20 @@ export class OrchestratorService {
 
       await this.log(client.id, job.id, 'published', { result });
     } catch (err) {
-      await this.jobRepo.update(job.id, { current_stage: 'completed', completed_at: new Date() });
-      await this.sender.sendText(phone, '❌ حدث خطأ أثناء النشر. يرجى المحاولة لاحقاً.');
+      // Publish API error → mirrors n8n "onError: continueErrorOutput" which
+      // routes back to send the OAuth link (token may have expired/been revoked).
       this.logger.error(`doPublish failed: ${err.message}`, err.stack);
+      await this.jobRepo.update(job.id, { current_stage: 'await_publish_approval' });
+      await this.sendMetaAuthLink(client.id, phone);
     }
+  }
+
+  private async sendMetaAuthLink(clientId: number, phone: string): Promise<void> {
+    const apiBase = this.config.get('API_BASE_URL', '');
+    const oauthUrl = `${apiBase}/api/meta-oauth-complete?action=start&client_id=${clientId}`;
+    await this.sender.sendText(phone,
+      `🔐 *مطلوب ربط الحساب*\n\nللنشر على فيسبوك وإنستغرام، يرجى ربط حسابك:\n\n👉 ${oauthUrl}\n\nبعد الربط، أرسل *نعم* مجدداً للنشر. ✅`,
+    );
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
