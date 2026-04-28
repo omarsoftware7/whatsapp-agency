@@ -6,9 +6,9 @@ import axios from 'axios';
 import satori from 'satori';
 
 const W = 800;
-const IMG_H = 800;
+const IMG_H = 740;
 const TOP_H = 110;
-const BTM_H = 280;
+const BTM_H = 320;
 const TOTAL_H = TOP_H + IMG_H + BTM_H;
 
 function hasRTL(text: string) {
@@ -28,6 +28,27 @@ async function toDataUri(buf: Buffer, mime = 'image/jpeg') {
   return `data:${mime};base64,${buf.toString('base64')}`;
 }
 
+// SVG path icons (Instagram-style, 24×24 viewBox)
+function svgIcon(d: string, size = 28): any {
+  return {
+    type: 'svg',
+    props: {
+      width: size, height: size,
+      viewBox: '0 0 24 24',
+      style: { display: 'flex' },
+      children: [{
+        type: 'path',
+        props: { d, fill: 'none', stroke: '#ffffff', strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round' },
+      }],
+    },
+  };
+}
+
+const ICON_HEART     = 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
+const ICON_COMMENT   = 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z';
+const ICON_SEND      = 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z';
+const ICON_BOOKMARK  = 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z';
+
 @Injectable()
 export class InstagramPreviewService {
   private readonly logger = new Logger(InstagramPreviewService.name);
@@ -45,11 +66,9 @@ export class InstagramPreviewService {
     logoUrl?: string | null,
   ): Promise<Buffer | null> {
     try {
-      // ── Fetch images ──────────────────────────────────────────────────────
       const designBuf = await this.fetch(designImageUrl);
       if (!designBuf) throw new Error('Could not fetch design image');
 
-      // Resize design to W×W square
       const designResized = await sharp(designBuf).resize(W, IMG_H, { fit: 'cover' }).jpeg({ quality: 90 }).toBuffer();
       const designUri = await toDataUri(designResized);
 
@@ -65,10 +84,9 @@ export class InstagramPreviewService {
       }
 
       const rtl = hasRTL(caption);
-      const captionShort = caption.length > 130 ? caption.slice(0, 127) + '…' : caption;
+      const captionShort = caption.length > 140 ? caption.slice(0, 137) + '…' : caption;
       const ff = '"Noto", sans-serif';
 
-      // ── Build satori element tree ─────────────────────────────────────────
       const el: any = {
         type: 'div',
         props: {
@@ -80,7 +98,7 @@ export class InstagramPreviewService {
           },
           children: [
 
-            // ── TOP BAR ─────────────────────────────────────────────────────
+            // ── TOP BAR ──────────────────────────────────────────────────────
             {
               type: 'div',
               props: {
@@ -90,7 +108,7 @@ export class InstagramPreviewService {
                   borderBottom: '1px solid #1a1a1a',
                 },
                 children: [
-                  // Avatar circle with gradient border
+                  // Avatar with gradient ring
                   {
                     type: 'div',
                     props: {
@@ -123,12 +141,17 @@ export class InstagramPreviewService {
                       children: `@${handle}`,
                     },
                   },
-                  // Dots
+                  // Three dots (drawn as circles)
                   {
-                    type: 'div',
+                    type: 'svg',
                     props: {
-                      style: { color: '#888', fontSize: 28, letterSpacing: 4 },
-                      children: '...',
+                      width: 28, height: 8, viewBox: '0 0 28 8',
+                      style: { display: 'flex' },
+                      children: [
+                        { type: 'circle', props: { cx: 2,  cy: 4, r: 2, fill: '#888' } },
+                        { type: 'circle', props: { cx: 14, cy: 4, r: 2, fill: '#888' } },
+                        { type: 'circle', props: { cx: 26, cy: 4, r: 2, fill: '#888' } },
+                      ],
                     },
                   },
                 ],
@@ -141,7 +164,7 @@ export class InstagramPreviewService {
               props: {
                 src: designUri,
                 width: W, height: IMG_H,
-                style: { display: 'flex' },
+                style: { display: 'flex', flexShrink: 0 },
               },
             },
 
@@ -151,9 +174,9 @@ export class InstagramPreviewService {
               props: {
                 style: {
                   display: 'flex', flexDirection: 'column',
-                  flex: 1, padding: '16px 18px',
+                  padding: '18px 20px 12px',
                   borderTop: '1px solid #1a1a1a',
-                  gap: 12,
+                  gap: 10,
                 },
                 children: [
 
@@ -161,13 +184,13 @@ export class InstagramPreviewService {
                   {
                     type: 'div',
                     props: {
-                      style: { display: 'flex', alignItems: 'center', gap: 22 },
+                      style: { display: 'flex', alignItems: 'center', gap: 20 },
                       children: [
-                        this.icon('♡'),
-                        this.icon('◻'),
-                        this.icon('▷'),
+                        svgIcon(ICON_HEART),
+                        svgIcon(ICON_COMMENT),
+                        svgIcon(ICON_SEND),
                         { type: 'div', props: { style: { flex: 1 } } },
-                        this.icon('⊡'),
+                        svgIcon(ICON_BOOKMARK),
                       ],
                     },
                   },
@@ -176,33 +199,39 @@ export class InstagramPreviewService {
                   {
                     type: 'div',
                     props: {
-                      style: { color: '#ffffff', fontSize: 28, fontWeight: 700 },
+                      style: { color: '#ffffff', fontSize: 26, fontWeight: 700 },
                       children: '1,243 likes',
                     },
                   },
 
-                  // Caption
+                  // Caption — handle + text, RTL-aware
                   {
                     type: 'div',
                     props: {
                       style: {
-                        display: 'flex', flexWrap: 'wrap',
-                        fontSize: 26,
+                        display: 'flex',
+                        flexDirection: rtl ? 'row-reverse' : 'row',
+                        flexWrap: 'wrap',
+                        fontSize: 24,
+                        lineHeight: 1.45,
                         direction: rtl ? 'rtl' : 'ltr',
-                        textAlign: rtl ? 'right' : 'left',
                         width: '100%',
                       },
                       children: [
                         {
                           type: 'span',
                           props: {
-                            style: { color: '#ffffff', fontWeight: 700, marginRight: rtl ? 0 : 6, marginLeft: rtl ? 6 : 0 },
+                            style: {
+                              color: '#ffffff', fontWeight: 700,
+                              marginLeft: rtl ? 8 : 0,
+                              marginRight: rtl ? 0 : 8,
+                            },
                             children: `@${handle}`,
                           },
                         },
                         {
                           type: 'span',
-                          props: { style: { color: '#c8c8c8' }, children: ' ' + captionShort },
+                          props: { style: { color: '#c8c8c8' }, children: captionShort },
                         },
                       ],
                     },
@@ -211,7 +240,7 @@ export class InstagramPreviewService {
                   // Timestamp
                   {
                     type: 'div',
-                    props: { style: { color: '#666', fontSize: 22 }, children: '2 hours ago' },
+                    props: { style: { color: '#555', fontSize: 20 }, children: '2 HOURS AGO' },
                   },
 
                 ],
@@ -230,13 +259,6 @@ export class InstagramPreviewService {
       this.logger.error(`Instagram preview failed: ${err.message}`);
       return null;
     }
-  }
-
-  private icon(char: string): any {
-    return {
-      type: 'div',
-      props: { style: { color: '#ffffff', fontSize: 32 }, children: char },
-    };
   }
 
   private async fetch(url: string): Promise<Buffer | null> {
