@@ -5,16 +5,14 @@ import * as path from 'path';
 import axios from 'axios';
 import satori from 'satori';
 
-const W = 800;
-const IMG_H = 740;
-const TOP_H = 110;
-const BTM_H = 320;
+const W      = 800;
+const IMG_H  = 720;
+const TOP_H  = 110;
+const BTM_H  = 340;
 const TOTAL_H = TOP_H + IMG_H + BTM_H;
 
-// NotoArabic and NotoHebrew are listed first so satori resolves RTL glyphs
-// before falling back to NotoSans for Latin/numbers.
-// Each font MUST have a unique name — if they share a name satori only uses
-// the first one it loaded for that weight/style and never checks the others.
+// Each font MUST have a unique name — same name → satori picks only the first
+// at that weight/style and never tries the others for missing glyphs.
 function loadFonts() {
   const dir = path.join(__dirname, '..', '..', '..', 'fonts');
   return [
@@ -24,18 +22,16 @@ function loadFonts() {
   ].filter(f => f.data);
 }
 
-function hasArabic(text: string)  { return /[\u0600-\u06FF]/.test(text); }
-function hasHebrew(text: string)  { return /[\u0590-\u05FF]/.test(text); }
-function hasRTL(text: string)     { return hasArabic(text) || hasHebrew(text); }
+function hasArabic(t: string) { return /[\u0600-\u06FF]/.test(t); }
+function hasHebrew(t: string) { return /[\u0590-\u05FF]/.test(t); }
+function hasRTL(t: string)    { return hasArabic(t) || hasHebrew(t); }
 
-// Satori resolves font-family as a CSS fallback list.
-// Put the RTL font first so Arabic/Hebrew glyphs are found immediately;
-// NotoSans covers Latin/digits in both directions.
-function fontFamily(text: string) {
-  if (hasArabic(text)) return '"NotoArabic", "NotoSans", sans-serif';
-  if (hasHebrew(text)) return '"NotoHebrew", "NotoSans", sans-serif';
+function captionFontFamily(t: string) {
+  if (hasArabic(t)) return '"NotoArabic", "NotoSans", sans-serif';
+  if (hasHebrew(t)) return '"NotoHebrew", "NotoSans", sans-serif';
   return '"NotoSans", sans-serif';
 }
+const LATIN_FF = '"NotoSans", sans-serif';
 
 async function toDataUri(buf: Buffer, mime = 'image/jpeg') {
   return `data:${mime};base64,${buf.toString('base64')}`;
@@ -45,8 +41,7 @@ function svgIcon(d: string, size = 26): any {
   return {
     type: 'svg',
     props: {
-      width: size, height: size,
-      viewBox: '0 0 24 24',
+      width: size, height: size, viewBox: '0 0 24 24',
       style: { display: 'flex', flexShrink: 0 },
       children: [{
         type: 'path',
@@ -61,10 +56,8 @@ const ICON_COMMENT  = 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 
 const ICON_SEND     = 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z';
 const ICON_BOOKMARK = 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z';
 
-const AVATAR_SIZE  = 56;
-const AVATAR_INNER = 50;
-const AVATAR_R     = AVATAR_SIZE / 2;
-const INNER_R      = AVATAR_INNER / 2;
+const AV = 54;   // outer avatar diameter
+const AVI = 48;  // inner logo diameter (3px ring on each side)
 
 @Injectable()
 export class InstagramPreviewService {
@@ -86,7 +79,10 @@ export class InstagramPreviewService {
       const designBuf = await this.fetch(designImageUrl);
       if (!designBuf) throw new Error('Could not fetch design image');
 
-      const designResized = await sharp(designBuf).resize(W, IMG_H, { fit: 'cover' }).jpeg({ quality: 90 }).toBuffer();
+      const designResized = await sharp(designBuf)
+        .resize(W, IMG_H, { fit: 'cover' })
+        .jpeg({ quality: 90 })
+        .toBuffer();
       const designUri = await toDataUri(designResized);
 
       let logoUri: string | null = null;
@@ -94,19 +90,22 @@ export class InstagramPreviewService {
         try {
           const logoBuf = await this.fetch(logoUrl);
           if (logoBuf) {
+            // flatten() removes transparency → gradient ring won't bleed through
             const logoSmall = await sharp(logoBuf)
-              .resize(AVATAR_INNER, AVATAR_INNER, { fit: 'cover' })
-              .png()
+              .resize(AVI, AVI, { fit: 'cover' })
+              .flatten({ background: '#000000' })
+              .jpeg({ quality: 95 })
               .toBuffer();
-            logoUri = await toDataUri(logoSmall, 'image/png');
+            logoUri = await toDataUri(logoSmall, 'image/jpeg');
           }
         } catch { /* ignore */ }
       }
 
-      const rtl = hasRTL(caption);
-      const captionShort = caption.length > 140 ? caption.slice(0, 137) + '…' : caption;
-      const captionFF = fontFamily(caption);
-      const latinFF = '"NotoSans", sans-serif';
+      const rtl        = hasRTL(caption);
+      const captionFF  = captionFontFamily(caption);
+      // Strip newlines to avoid satori rendering them as gaps; replace with space
+      const captionClean = caption.replace(/\n+/g, ' ').trim();
+      const captionShort = captionClean.length > 150 ? captionClean.slice(0, 147) + '…' : captionClean;
 
       const el: any = {
         type: 'div',
@@ -115,7 +114,7 @@ export class InstagramPreviewService {
             display: 'flex', flexDirection: 'column',
             width: W, height: TOTAL_H,
             backgroundColor: '#000000',
-            fontFamily: latinFF,
+            fontFamily: LATIN_FF,
           },
           children: [
 
@@ -129,37 +128,36 @@ export class InstagramPreviewService {
                   borderBottom: '1px solid #1a1a1a',
                 },
                 children: [
-                  // Avatar with Instagram gradient ring
+                  // Avatar — gradient ring + logo (no transparency leak)
                   {
                     type: 'div',
                     props: {
                       style: {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_R,
-                        background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #bc1888)',
-                        padding: 2, marginRight: 12, flexShrink: 0,
+                        width: AV, height: AV, borderRadius: AV / 2,
+                        background: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#bc1888)',
+                        padding: 3, marginRight: 14, flexShrink: 0,
                       },
                       children: [{
                         type: 'div',
                         props: {
                           style: {
-                            display: 'flex', width: AVATAR_INNER, height: AVATAR_INNER,
-                            borderRadius: INNER_R, overflow: 'hidden',
-                            backgroundColor: '#111',
+                            display: 'flex', width: AVI, height: AVI,
+                            borderRadius: AVI / 2, overflow: 'hidden',
+                            backgroundColor: '#000',
                           },
-                          children: logoUri ? [{
-                            type: 'img',
-                            props: { src: logoUri, width: AVATAR_INNER, height: AVATAR_INNER },
-                          }] : [],
+                          children: logoUri
+                            ? [{ type: 'img', props: { src: logoUri, width: AVI, height: AVI } }]
+                            : [],
                         },
                       }],
                     },
                   },
-                  // Handle (always Latin font)
+                  // @handle
                   {
                     type: 'div',
                     props: {
-                      style: { flex: 1, color: '#ffffff', fontSize: 28, fontWeight: 700, fontFamily: latinFF },
+                      style: { flex: 1, color: '#ffffff', fontSize: 28, fontWeight: 700, fontFamily: LATIN_FF },
                       children: `@${handle}`,
                     },
                   },
@@ -167,8 +165,7 @@ export class InstagramPreviewService {
                   {
                     type: 'svg',
                     props: {
-                      width: 24, height: 6, viewBox: '0 0 24 6',
-                      style: { display: 'flex' },
+                      width: 24, height: 6, viewBox: '0 0 24 6', style: { display: 'flex' },
                       children: [
                         { type: 'circle', props: { cx: 2,  cy: 3, r: 2, fill: '#888' } },
                         { type: 'circle', props: { cx: 12, cy: 3, r: 2, fill: '#888' } },
@@ -184,8 +181,7 @@ export class InstagramPreviewService {
             {
               type: 'img',
               props: {
-                src: designUri,
-                width: W, height: IMG_H,
+                src: designUri, width: W, height: IMG_H,
                 style: { display: 'flex', flexShrink: 0 },
               },
             },
@@ -202,61 +198,60 @@ export class InstagramPreviewService {
                 },
                 children: [
 
-                  // Action icons row
+                  // Action icons
                   {
                     type: 'div',
                     props: {
                       style: { display: 'flex', alignItems: 'center', gap: 18 },
                       children: [
-                        svgIcon(ICON_HEART),
-                        svgIcon(ICON_COMMENT),
-                        svgIcon(ICON_SEND),
+                        svgIcon(ICON_HEART), svgIcon(ICON_COMMENT), svgIcon(ICON_SEND),
                         { type: 'div', props: { style: { flex: 1 } } },
                         svgIcon(ICON_BOOKMARK),
                       ],
                     },
                   },
 
-                  // Likes count
+                  // Likes
                   {
                     type: 'div',
                     props: {
-                      style: { color: '#ffffff', fontSize: 24, fontWeight: 700, fontFamily: latinFF },
+                      style: { color: '#ffffff', fontSize: 24, fontWeight: 700, fontFamily: LATIN_FF },
                       children: '1,243 likes',
                     },
                   },
 
-                  // Caption — handle bold + caption text, script-aware font
+                  // Caption block — two sub-rows stacked, aligned to the reading edge
                   {
                     type: 'div',
                     props: {
                       style: {
-                        display: 'flex',
-                        flexDirection: rtl ? 'row-reverse' : 'row',
-                        flexWrap: 'wrap',
-                        fontSize: 23,
-                        lineHeight: 1.5,
-                        fontFamily: captionFF,
-                        direction: rtl ? 'rtl' : 'ltr',
-                        width: '100%',
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: rtl ? 'flex-end' : 'flex-start',
+                        width: '100%', gap: 2,
                       },
                       children: [
+                        // Bold @handle on its own line
                         {
-                          type: 'span',
+                          type: 'div',
                           props: {
                             style: {
                               color: '#ffffff', fontWeight: 700,
-                              fontFamily: latinFF,
-                              marginLeft: rtl ? 8 : 0,
-                              marginRight: rtl ? 0 : 8,
+                              fontSize: 23, fontFamily: LATIN_FF,
                             },
                             children: `@${handle}`,
                           },
                         },
+                        // Caption text — direction controls HarfBuzz shaping + wrapping
                         {
-                          type: 'span',
+                          type: 'div',
                           props: {
-                            style: { color: '#c8c8c8', fontFamily: captionFF },
+                            style: {
+                              color: '#c8c8c8', fontSize: 23,
+                              fontFamily: captionFF,
+                              direction: rtl ? 'rtl' : 'ltr',
+                              textAlign: rtl ? 'right' : 'left',
+                              width: '100%',
+                            },
                             children: captionShort,
                           },
                         },
@@ -268,7 +263,7 @@ export class InstagramPreviewService {
                   {
                     type: 'div',
                     props: {
-                      style: { color: '#555', fontSize: 19, fontFamily: latinFF },
+                      style: { color: '#555', fontSize: 19, fontFamily: LATIN_FF },
                       children: '2 HOURS AGO',
                     },
                   },
