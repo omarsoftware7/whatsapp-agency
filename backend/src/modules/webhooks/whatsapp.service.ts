@@ -624,13 +624,17 @@ export class WhatsappService {
     if (!data) throw new Error('Job not found');
     const client: Client = data.client;
 
-    // Client-level tokens take priority; fall back to env vars so a single
-    // Railway deployment works for testing without requiring per-client OAuth.
-    const pageToken    = client.meta_page_token    || this.config.get<string>('META_PAGE_TOKEN');
-    const pageId       = client.meta_page_id       || this.config.get<string>('META_PAGE_ID');
-    const igAccountId  = client.instagram_account_id || this.config.get<string>('META_INSTAGRAM_ACCOUNT_ID');
+    // Priority: client DB row → META_PAGE_TOKEN env var → WA_ACCESS_TOKEN (same permanent token)
+    // Page/IG IDs: client DB row → dedicated env vars
+    const pageToken   = client.meta_page_token
+                     || this.config.get<string>('META_PAGE_TOKEN')
+                     || this.config.get<string>('WA_ACCESS_TOKEN');
+    const pageId      = client.meta_page_id      || this.config.get<string>('META_PAGE_ID');
+    const igAccountId = client.instagram_account_id || this.config.get<string>('META_INSTAGRAM_ACCOUNT_ID');
 
-    if (!pageToken || !pageId) throw new Error('Meta tokens not configured — set META_PAGE_TOKEN + META_PAGE_ID in Railway or connect via OAuth');
+    this.logger.log(`🌐 Publish tokens — pageId: ${pageId ?? 'MISSING'} | igAccountId: ${igAccountId ?? 'none'} | token: ${pageToken ? 'present' : 'MISSING'}`);
+
+    if (!pageToken || !pageId) throw new Error('Meta tokens not configured — add META_PAGE_ID + META_INSTAGRAM_ACCOUNT_ID to Railway env vars');
 
     const designs: string[] = data.design_variations ?? [];
     const approvedIndex = data.approved_design_index ?? 0;
