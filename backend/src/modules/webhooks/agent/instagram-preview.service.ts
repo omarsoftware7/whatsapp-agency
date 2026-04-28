@@ -227,33 +227,51 @@ export class InstagramPreviewService {
                     },
                   },
 
-                  // Caption — handle + text, stacked for clean RTL handling
+                  // Caption — handle + text, RTL-aware
                   {
                     type: 'div',
                     props: {
-                      style: {
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: rtl ? 'flex-end' : 'flex-start',
-                        width: '100%', gap: 2,
-                      },
+                      style: { display: 'flex', flexDirection: 'column', width: '100%', gap: 2 },
                       children: [
-                        {
-                          type: 'div',
-                          props: {
-                            style: { color: '#ffffff', fontWeight: 700, fontSize: 23, fontFamily: LATIN_FF },
-                            children: `@${handle}`,
-                          },
-                        },
+                        // @handle aligned to reading edge
                         {
                           type: 'div',
                           props: {
                             style: {
-                              color: '#c8c8c8', fontSize: 23,
-                              fontFamily: captionFF,
-                              direction: rtl ? 'rtl' : 'ltr',
-                              textAlign: rtl ? 'right' : 'left',
+                              display: 'flex',
+                              justifyContent: rtl ? 'flex-end' : 'flex-start',
+                              color: '#ffffff', fontWeight: 700, fontSize: 23, fontFamily: LATIN_FF,
+                            },
+                            children: `@${handle}`,
+                          },
+                        },
+                        // Caption text:
+                        // RTL → each word is a separate flex item inside a direction:rtl
+                        // flex container. Yoga's flex engine places items right-to-left
+                        // and wraps correctly — far more reliable than CSS direction on
+                        // a single text node.
+                        // LTR → plain string in a block div.
+                        rtl ? {
+                          type: 'div',
+                          props: {
+                            style: {
+                              display: 'flex', flexWrap: 'wrap',
+                              direction: 'rtl',
+                              gap: '4px 7px',
                               width: '100%',
                             },
+                            children: captionShort.split(/\s+/).filter(Boolean).map((word: string) => ({
+                              type: 'span',
+                              props: {
+                                style: { color: '#c8c8c8', fontSize: 23, fontFamily: captionFF },
+                                children: word,
+                              },
+                            })),
+                          },
+                        } : {
+                          type: 'div',
+                          props: {
+                            style: { color: '#c8c8c8', fontSize: 23, fontFamily: captionFF, width: '100%' },
                             children: captionShort,
                           },
                         },
