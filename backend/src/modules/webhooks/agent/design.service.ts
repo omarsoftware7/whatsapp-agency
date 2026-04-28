@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { R2Service } from '../../../common/services/r2.service';
 import axios from 'axios';
+import * as sharp from 'sharp';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Client } from '../../../entities/client.entity';
@@ -356,9 +357,7 @@ export class DesignService {
 
   private async mockDesign(job: CreativeJob): Promise<DesignResult> {
     this.logger.warn(`⚠️  MOCK_AI enabled — returning placeholder design for job #${job.id}`);
-    // 1080×1080 solid gradient PNG via sharp
-    const { default: sharpLib } = await import('sharp') as any;
-    const buffer: Buffer = await sharpLib({
+    const buffer: Buffer = await sharp({
       create: { width: 1080, height: 1080, channels: 3, background: { r: 30, g: 30, b: 60 } },
     })
       .composite([{
