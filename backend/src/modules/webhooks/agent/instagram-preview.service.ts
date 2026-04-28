@@ -11,31 +11,43 @@ const TOP_H = 110;
 const BTM_H = 320;
 const TOTAL_H = TOP_H + IMG_H + BTM_H;
 
-function hasRTL(text: string) {
-  return /[\u0590-\u05FF\u0600-\u06FF]/.test(text);
-}
-
+// NotoArabic and NotoHebrew are listed first so satori resolves RTL glyphs
+// before falling back to NotoSans for Latin/numbers.
+// Each font MUST have a unique name — if they share a name satori only uses
+// the first one it loaded for that weight/style and never checks the others.
 function loadFonts() {
   const dir = path.join(__dirname, '..', '..', '..', 'fonts');
   return [
-    { name: 'Noto', data: fs.readFileSync(path.join(dir, 'NotoSans-Regular.ttf')),   weight: 400 as const, style: 'normal' as const },
-    { name: 'Noto', data: fs.readFileSync(path.join(dir, 'NotoArabic-Regular.ttf')), weight: 400 as const, style: 'normal' as const },
-    { name: 'Noto', data: fs.readFileSync(path.join(dir, 'NotoHebrew-Regular.ttf')), weight: 400 as const, style: 'normal' as const },
+    { name: 'NotoArabic', data: fs.readFileSync(path.join(dir, 'NotoArabic-Regular.ttf')), weight: 400 as const, style: 'normal' as const },
+    { name: 'NotoHebrew', data: fs.readFileSync(path.join(dir, 'NotoHebrew-Regular.ttf')), weight: 400 as const, style: 'normal' as const },
+    { name: 'NotoSans',   data: fs.readFileSync(path.join(dir, 'NotoSans-Regular.ttf')),   weight: 400 as const, style: 'normal' as const },
   ].filter(f => f.data);
+}
+
+function hasArabic(text: string)  { return /[\u0600-\u06FF]/.test(text); }
+function hasHebrew(text: string)  { return /[\u0590-\u05FF]/.test(text); }
+function hasRTL(text: string)     { return hasArabic(text) || hasHebrew(text); }
+
+// Satori resolves font-family as a CSS fallback list.
+// Put the RTL font first so Arabic/Hebrew glyphs are found immediately;
+// NotoSans covers Latin/digits in both directions.
+function fontFamily(text: string) {
+  if (hasArabic(text)) return '"NotoArabic", "NotoSans", sans-serif';
+  if (hasHebrew(text)) return '"NotoHebrew", "NotoSans", sans-serif';
+  return '"NotoSans", sans-serif';
 }
 
 async function toDataUri(buf: Buffer, mime = 'image/jpeg') {
   return `data:${mime};base64,${buf.toString('base64')}`;
 }
 
-// SVG path icons (Instagram-style, 24×24 viewBox)
-function svgIcon(d: string, size = 28): any {
+function svgIcon(d: string, size = 26): any {
   return {
     type: 'svg',
     props: {
       width: size, height: size,
       viewBox: '0 0 24 24',
-      style: { display: 'flex' },
+      style: { display: 'flex', flexShrink: 0 },
       children: [{
         type: 'path',
         props: { d, fill: 'none', stroke: '#ffffff', strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round' },
@@ -44,15 +56,20 @@ function svgIcon(d: string, size = 28): any {
   };
 }
 
-const ICON_HEART     = 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
-const ICON_COMMENT   = 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z';
-const ICON_SEND      = 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z';
-const ICON_BOOKMARK  = 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z';
+const ICON_HEART    = 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
+const ICON_COMMENT  = 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z';
+const ICON_SEND     = 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z';
+const ICON_BOOKMARK = 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z';
+
+const AVATAR_SIZE  = 56;
+const AVATAR_INNER = 50;
+const AVATAR_R     = AVATAR_SIZE / 2;
+const INNER_R      = AVATAR_INNER / 2;
 
 @Injectable()
 export class InstagramPreviewService {
   private readonly logger = new Logger(InstagramPreviewService.name);
-  private fonts: any[] | null = null;
+  private fonts: ReturnType<typeof loadFonts> | null = null;
 
   private getFonts() {
     if (!this.fonts) this.fonts = loadFonts();
@@ -77,7 +94,10 @@ export class InstagramPreviewService {
         try {
           const logoBuf = await this.fetch(logoUrl);
           if (logoBuf) {
-            const logoSmall = await sharp(logoBuf).resize(68, 68, { fit: 'cover' }).png().toBuffer();
+            const logoSmall = await sharp(logoBuf)
+              .resize(AVATAR_INNER, AVATAR_INNER, { fit: 'cover' })
+              .png()
+              .toBuffer();
             logoUri = await toDataUri(logoSmall, 'image/png');
           }
         } catch { /* ignore */ }
@@ -85,7 +105,8 @@ export class InstagramPreviewService {
 
       const rtl = hasRTL(caption);
       const captionShort = caption.length > 140 ? caption.slice(0, 137) + '…' : caption;
-      const ff = '"Noto", sans-serif';
+      const captionFF = fontFamily(caption);
+      const latinFF = '"NotoSans", sans-serif';
 
       const el: any = {
         type: 'div',
@@ -94,7 +115,7 @@ export class InstagramPreviewService {
             display: 'flex', flexDirection: 'column',
             width: W, height: TOTAL_H,
             backgroundColor: '#000000',
-            fontFamily: ff,
+            fontFamily: latinFF,
           },
           children: [
 
@@ -104,53 +125,54 @@ export class InstagramPreviewService {
               props: {
                 style: {
                   display: 'flex', alignItems: 'center',
-                  height: TOP_H, padding: '0 18px',
+                  height: TOP_H, padding: '0 20px',
                   borderBottom: '1px solid #1a1a1a',
                 },
                 children: [
-                  // Avatar with gradient ring
+                  // Avatar with Instagram gradient ring
                   {
                     type: 'div',
                     props: {
                       style: {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: 74, height: 74, borderRadius: 37,
+                        width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_R,
                         background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #bc1888)',
-                        padding: 3, marginRight: 14, flexShrink: 0,
+                        padding: 2, marginRight: 12, flexShrink: 0,
                       },
                       children: [{
                         type: 'div',
                         props: {
                           style: {
-                            display: 'flex', width: 68, height: 68, borderRadius: 34,
-                            overflow: 'hidden', backgroundColor: '#333',
+                            display: 'flex', width: AVATAR_INNER, height: AVATAR_INNER,
+                            borderRadius: INNER_R, overflow: 'hidden',
+                            backgroundColor: '#111',
                           },
                           children: logoUri ? [{
                             type: 'img',
-                            props: { src: logoUri, width: 68, height: 68 },
+                            props: { src: logoUri, width: AVATAR_INNER, height: AVATAR_INNER },
                           }] : [],
                         },
                       }],
                     },
                   },
-                  // Handle
+                  // Handle (always Latin font)
                   {
                     type: 'div',
                     props: {
-                      style: { flex: 1, color: '#ffffff', fontSize: 30, fontWeight: 700 },
+                      style: { flex: 1, color: '#ffffff', fontSize: 28, fontWeight: 700, fontFamily: latinFF },
                       children: `@${handle}`,
                     },
                   },
-                  // Three dots (drawn as circles)
+                  // Three-dot menu
                   {
                     type: 'svg',
                     props: {
-                      width: 28, height: 8, viewBox: '0 0 28 8',
+                      width: 24, height: 6, viewBox: '0 0 24 6',
                       style: { display: 'flex' },
                       children: [
-                        { type: 'circle', props: { cx: 2,  cy: 4, r: 2, fill: '#888' } },
-                        { type: 'circle', props: { cx: 14, cy: 4, r: 2, fill: '#888' } },
-                        { type: 'circle', props: { cx: 26, cy: 4, r: 2, fill: '#888' } },
+                        { type: 'circle', props: { cx: 2,  cy: 3, r: 2, fill: '#888' } },
+                        { type: 'circle', props: { cx: 12, cy: 3, r: 2, fill: '#888' } },
+                        { type: 'circle', props: { cx: 22, cy: 3, r: 2, fill: '#888' } },
                       ],
                     },
                   },
@@ -174,17 +196,17 @@ export class InstagramPreviewService {
               props: {
                 style: {
                   display: 'flex', flexDirection: 'column',
-                  padding: '18px 20px 12px',
+                  padding: '18px 20px 14px',
                   borderTop: '1px solid #1a1a1a',
                   gap: 10,
                 },
                 children: [
 
-                  // Icons row
+                  // Action icons row
                   {
                     type: 'div',
                     props: {
-                      style: { display: 'flex', alignItems: 'center', gap: 20 },
+                      style: { display: 'flex', alignItems: 'center', gap: 18 },
                       children: [
                         svgIcon(ICON_HEART),
                         svgIcon(ICON_COMMENT),
@@ -195,16 +217,16 @@ export class InstagramPreviewService {
                     },
                   },
 
-                  // Likes
+                  // Likes count
                   {
                     type: 'div',
                     props: {
-                      style: { color: '#ffffff', fontSize: 26, fontWeight: 700 },
+                      style: { color: '#ffffff', fontSize: 24, fontWeight: 700, fontFamily: latinFF },
                       children: '1,243 likes',
                     },
                   },
 
-                  // Caption — handle + text, RTL-aware
+                  // Caption — handle bold + caption text, script-aware font
                   {
                     type: 'div',
                     props: {
@@ -212,8 +234,9 @@ export class InstagramPreviewService {
                         display: 'flex',
                         flexDirection: rtl ? 'row-reverse' : 'row',
                         flexWrap: 'wrap',
-                        fontSize: 24,
-                        lineHeight: 1.45,
+                        fontSize: 23,
+                        lineHeight: 1.5,
+                        fontFamily: captionFF,
                         direction: rtl ? 'rtl' : 'ltr',
                         width: '100%',
                       },
@@ -223,6 +246,7 @@ export class InstagramPreviewService {
                           props: {
                             style: {
                               color: '#ffffff', fontWeight: 700,
+                              fontFamily: latinFF,
                               marginLeft: rtl ? 8 : 0,
                               marginRight: rtl ? 0 : 8,
                             },
@@ -231,7 +255,10 @@ export class InstagramPreviewService {
                         },
                         {
                           type: 'span',
-                          props: { style: { color: '#c8c8c8' }, children: captionShort },
+                          props: {
+                            style: { color: '#c8c8c8', fontFamily: captionFF },
+                            children: captionShort,
+                          },
                         },
                       ],
                     },
@@ -240,7 +267,10 @@ export class InstagramPreviewService {
                   // Timestamp
                   {
                     type: 'div',
-                    props: { style: { color: '#555', fontSize: 20 }, children: '2 HOURS AGO' },
+                    props: {
+                      style: { color: '#555', fontSize: 19, fontFamily: latinFF },
+                      children: '2 HOURS AGO',
+                    },
                   },
 
                 ],
