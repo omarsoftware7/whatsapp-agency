@@ -675,7 +675,7 @@ export class WhatsappService {
             this.logger.warn(`PNG→JPEG conversion failed, using original: ${e.message}`);
           }
         }
-        const createRes = await axios.post(`${graphBase}/${igAccountId}/media`, null, { params: { image_url: igImageUrl, caption, media_type: 'IMAGE', access_token: pageToken } });
+        const createRes = await axios.post(`${graphBase}/${igAccountId}/media`, null, { params: { image_url: igImageUrl, caption, access_token: pageToken } });
         const containerId: string = createRes.data.id;
 
         // Poll for FINISHED
@@ -699,6 +699,7 @@ export class WhatsappService {
           results.instagram = { success: false, error: 'Container processing timeout' };
         }
       } catch (e: any) {
+        this.logger.error(`Instagram publish error: ${JSON.stringify(e.response?.data ?? e.message)}`);
         results.instagram = { success: false, error: e.response?.data?.error?.message ?? e.message };
       }
     }
