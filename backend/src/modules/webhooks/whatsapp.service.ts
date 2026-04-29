@@ -668,7 +668,8 @@ export class WhatsappService {
         try {
           const imgBuf = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20_000 });
           const jpegBuf = await sharp(Buffer.from(imgBuf.data)).flatten({ background: '#ffffff' }).jpeg({ quality: 92 }).toBuffer();
-          const apiBase = this.config.get<string>('API_BASE_URL', '');
+          // Use MEDIA_BASE_URL (Railway direct URL, no Cloudflare proxy) so Instagram can fetch
+          const apiBase = this.config.get<string>('MEDIA_BASE_URL') || this.config.get<string>('API_BASE_URL', '');
           const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
           const filename = `ig_${jobId}_${Date.now()}.jpg`;
           const dir = path.join(uploadsDir, 'generated');
