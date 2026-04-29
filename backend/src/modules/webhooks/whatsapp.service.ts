@@ -9,6 +9,7 @@ import { R2Service } from '../../common/services/r2.service';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as sharp from 'sharp';
 
 const JOB_TYPE_MENU: Record<string, string> = {
   '1': 'announcement',
@@ -661,7 +662,20 @@ export class WhatsappService {
     // Instagram
     if (igAccountId) {
       try {
-        const createRes = await axios.post(`${graphBase}/${igAccountId}/media`, null, { params: { image_url: imageUrl, caption, access_token: pageToken } });
+        // Instagram requires JPEG (no alpha channel). Convert PNG → JPEG via R2 if needed.
+        let igImageUrl = imageUrl;
+        if (igImageUrl.endsWith('.png') && this.r2.isConfigured()) {
+          try {
+            const imgBuf = await axios.get(igImageUrl, { responseType: 'arraybuffer', timeout: 20_000 });
+            const jpegBuf = await sharp(Buffer.from(imgBuf.data)).flatten({ background: '#ffffff' }).jpeg({ quality: 92 }).toBuffer();
+            const key = `generated/ig_${jobId}_${Date.now()}.jpg`;
+            igImageUrl = await this.r2.upload(key, jpegBuf, 'image/jpeg');
+            this.logger.log(`📸 Converted PNG→JPEG for Instagram: ${igImageUrl}`);
+          } catch (e: any) {
+            this.logger.warn(`PNG→JPEG conversion failed, using original: ${e.message}`);
+          }
+        }
+        const createRes = await axios.post(`${graphBase}/${igAccountId}/media`, null, { params: { image_url: igImageUrl, caption, media_type: 'IMAGE', access_token: pageToken } });
         const containerId: string = createRes.data.id;
 
         // Poll for FINISHED
