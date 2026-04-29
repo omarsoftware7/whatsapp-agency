@@ -667,7 +667,20 @@ export class WhatsappService {
         let igImageUrl = imageUrl;
         try {
           const imgBuf = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20_000 });
-          const jpegBuf = await sharp(Buffer.from(imgBuf.data)).flatten({ background: '#ffffff' }).jpeg({ quality: 92 }).toBuffer();
+          const raw = sharp(Buffer.from(imgBuf.data));
+          const meta = await raw.metadata();
+          const w = meta.width ?? 1080;
+          const h = meta.height ?? 1080;
+          const ratio = w / h;
+          // Instagram requires aspect ratio between 4:5 (0.8) and 1.91:1
+          // Resize to 1080x1080 square if outside range
+          const needsResize = ratio < 0.8 || ratio > 1.91;
+          const jpegBuf = await raw
+            .flatten({ background: '#ffffff' })
+            .resize(needsResize ? 1080 : undefined, needsResize ? 1080 : undefined, { fit: 'contain', background: '#ffffff' })
+            .jpeg({ quality: 92 })
+            .toBuffer();
+          this.logger.log(`📐 Image for IG: ${w}x${h} ratio=${ratio.toFixed(2)} resized=${needsResize}`);
           // Use MEDIA_BASE_URL (Railway direct URL, no Cloudflare proxy) so Instagram can fetch
           const apiBase = this.config.get<string>('MEDIA_BASE_URL') || this.config.get<string>('API_BASE_URL', '');
           const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
