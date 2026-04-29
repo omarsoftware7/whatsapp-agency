@@ -640,6 +640,7 @@ export class WhatsappService {
     const approvedIndex = data.approved_design_index ?? 0;
     const imageUrl = designs[approvedIndex];
     if (!imageUrl) throw new Error('No approved design found');
+    this.logger.log(`📸 Publishing image URL: ${imageUrl}`);
 
     const caption = this.formatAdCopyCaption(data.ad_copy ?? '');
     const graphVersion = this.config.get('META_GRAPH_VERSION', 'v18.0');
