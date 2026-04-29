@@ -4,7 +4,7 @@ import { WhatsappController } from './whatsapp.controller';
 import { JobsController } from './jobs.controller';
 import { OnboardingController } from './onboarding.controller';
 import { PublishController } from './publish.controller';
-import { N8nMetaOAuthController, MetaOAuthCompleteController } from './n8n-meta-oauth.controller';
+import { N8nMetaOAuthController, MetaOAuthCompleteController, PrivacyPolicyController } from './n8n-meta-oauth.controller';
 import { WhatsappMediaController } from './whatsapp-media.controller';
 import { ClientInfoController } from './client-info.controller';
 import { FilesController } from './files.controller';
@@ -31,6 +31,7 @@ import { R2Service } from '../../common/services/r2.service';
     PublishController,
     N8nMetaOAuthController,
     MetaOAuthCompleteController,
+    PrivacyPolicyController,
     WhatsappMediaController,
     ClientInfoController,
     FilesController,

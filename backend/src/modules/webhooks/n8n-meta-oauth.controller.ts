@@ -60,6 +60,45 @@ export class N8nMetaOAuthController {
   }
 }
 
+@Controller('privacy-policy')
+export class PrivacyPolicyController {
+  @Get()
+  getPolicy(@Res() res: any) {
+    return res.send(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Launcho</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:800px;margin:40px auto;padding:0 20px;color:#333;line-height:1.6}h1{color:#1a1a1a}h2{color:#444;margin-top:32px}a{color:#2563eb}</style>
+</head>
+<body>
+<h1>Privacy Policy</h1>
+<p><strong>Last updated:</strong> April 2026</p>
+<p>Launcho ("we", "our", or "us") operates a WhatsApp-based marketing automation service. This policy explains how we collect, use, and protect your information.</p>
+<h2>Information We Collect</h2>
+<ul>
+<li>WhatsApp phone number and name when you message us</li>
+<li>Business information you provide (name, logo, description)</li>
+<li>Facebook Page and Instagram account tokens when you connect via OAuth</li>
+<li>Content you submit for ad creation (images, text)</li>
+</ul>
+<h2>How We Use Your Information</h2>
+<ul>
+<li>To generate and publish social media content on your behalf</li>
+<li>To manage your connected Facebook Pages and Instagram accounts</li>
+<li>To improve our service</li>
+</ul>
+<h2>Data Storage</h2>
+<p>Your data is stored securely. Facebook and Instagram access tokens are stored encrypted and used only to publish content you have explicitly approved.</p>
+<h2>Third-Party Services</h2>
+<p>We use the Meta (Facebook/Instagram) Graph API to publish content. Your use is also subject to <a href="https://www.facebook.com/policy.php">Meta's Privacy Policy</a>.</p>
+<h2>Your Rights</h2>
+<p>You may request deletion of your data at any time by contacting us via WhatsApp or at <a href="mailto:aborabeeomar@gmail.com">aborabeeomar@gmail.com</a>.</p>
+<h2>Contact</h2>
+<p>Email: <a href="mailto:aborabeeomar@gmail.com">aborabeeomar@gmail.com</a></p>
+</body></html>`);
+  }
+}
+
 // Handles /api/meta-oauth-complete?action=start&client_id=X
 // Mirrors meta_oauth_complete.php exactly:
 //   start    → show HTML page with "Connect" button
@@ -104,26 +143,28 @@ export class MetaOAuthCompleteController {
         return res.status(400).send('Missing token');
       }
 
-      const scope = [
-        'pages_show_list',
-        'pages_read_engagement',
-        'pages_manage_posts',
-        'pages_manage_engagement',
-        'instagram_basic',
-        'instagram_content_publish',
-        'business_management',
-      ].join(',');
-
       // Encode client_id in state only — never expose it in the URL shown to users
       const stateParam = Buffer.from(JSON.stringify({ client_id: resolvedClientId, ts: Date.now() })).toString('base64');
 
-      const oauthUrl = `https://www.facebook.com/${graphVer}/dialog/oauth?` + new URLSearchParams({
+      const configId = this.config.get('META_CONFIG_ID');
+      const oauthParams: Record<string, string> = {
         client_id: appId,
         redirect_uri: callbackUrl,
         state: stateParam,
-        scope,
         response_type: 'code',
-      }).toString();
+      };
+      if (configId) {
+        // Facebook Login for Business uses config_id instead of scope
+        oauthParams.config_id = configId;
+      } else {
+        oauthParams.scope = [
+          'pages_show_list', 'pages_read_engagement', 'pages_manage_posts',
+          'pages_manage_engagement', 'instagram_basic', 'instagram_content_publish',
+          'business_management',
+        ].join(',');
+      }
+
+      const oauthUrl = `https://www.facebook.com/${graphVer}/dialog/oauth?` + new URLSearchParams(oauthParams).toString();
 
       return res.redirect(oauthUrl);
     }
