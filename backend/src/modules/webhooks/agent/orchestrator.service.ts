@@ -644,8 +644,11 @@ export class OrchestratorService {
   }
 
   private async sendMetaAuthLink(clientId: number, phone: string): Promise<void> {
-    const apiBase = this.config.get('API_BASE_URL', '');
-    const oauthUrl = `${apiBase}/api/meta-oauth-complete?action=start&client_id=${clientId}`;
+    const apiBase  = this.config.get('API_BASE_URL', '');
+    const secret   = this.config.get('META_APP_SECRET', 'fallback-secret');
+    const { signOAuthToken } = await import('../n8n-meta-oauth.controller');
+    const token    = signOAuthToken(clientId, secret);
+    const oauthUrl = `${apiBase}/api/meta-oauth-complete?action=start&token=${token}`;
     await this.sender.sendText(phone,
       `🔐 *مطلوب ربط الحساب*\n\nللنشر على فيسبوك وإنستغرام، يرجى ربط حسابك:\n\n👉 ${oauthUrl}\n\nبعد الربط، أرسل *نعم* مجدداً للنشر. ✅`,
     );

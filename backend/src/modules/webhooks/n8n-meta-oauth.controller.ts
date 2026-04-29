@@ -3,6 +3,28 @@ import { ConfigService } from '@nestjs/config';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { WhatsappService } from './whatsapp.service';
 import axios from 'axios';
+import { createHmac, timingSafeEqual } from 'crypto';
+
+// Encode clientId into an opaque URL-safe token so the raw DB id is never
+// visible to end-users in WhatsApp links.
+export function signOAuthToken(clientId: number, secret: string): string {
+  const payload = Buffer.from(JSON.stringify({ id: clientId, ts: Date.now() })).toString('base64url');
+  const sig = createHmac('sha256', secret).update(payload).digest('base64url').slice(0, 22);
+  return `${payload}.${sig}`;
+}
+
+export function verifyOAuthToken(token: string, secret: string): number {
+  const dot = token.lastIndexOf('.');
+  if (dot === -1) throw new Error('Invalid token');
+  const payload = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  const expected = createHmac('sha256', secret).update(payload).digest('base64url').slice(0, 22);
+  if (!timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) throw new Error('Invalid token signature');
+  const { id, ts } = JSON.parse(Buffer.from(payload, 'base64url').toString());
+  // Tokens expire after 24 hours
+  if (Date.now() - ts > 86_400_000) throw new Error('Token expired');
+  return Number(id);
+}
 
 @Controller('meta-oauth')
 export class N8nMetaOAuthController {
@@ -66,7 +88,21 @@ export class MetaOAuthCompleteController {
 
     // ── STEP 1: Redirect directly to Facebook OAuth ──────────────────────────
     if (action === 'start') {
-      if (!clientIdStr) return res.status(400).send('client_id required');
+      // Accept either signed ?token= (from WhatsApp links) or raw ?client_id= (internal/admin)
+      const oauthSecret = appSecret || 'fallback-secret';
+      let resolvedClientId: string;
+      const tokenParam = (res.req?.query?.token as string) ?? '';
+      if (tokenParam) {
+        try {
+          resolvedClientId = String(verifyOAuthToken(tokenParam, oauthSecret));
+        } catch {
+          return res.status(400).send('Invalid or expired link. Please request a new one.');
+        }
+      } else if (clientIdStr) {
+        resolvedClientId = clientIdStr;
+      } else {
+        return res.status(400).send('Missing token');
+      }
 
       const scope = [
         'pages_show_list',
@@ -79,7 +115,7 @@ export class MetaOAuthCompleteController {
       ].join(',');
 
       // Encode client_id in state only — never expose it in the URL shown to users
-      const stateParam = Buffer.from(JSON.stringify({ client_id: clientIdStr, ts: Date.now() })).toString('base64');
+      const stateParam = Buffer.from(JSON.stringify({ client_id: resolvedClientId, ts: Date.now() })).toString('base64');
 
       const oauthUrl = `https://www.facebook.com/${graphVer}/dialog/oauth?` + new URLSearchParams({
         client_id: appId,
