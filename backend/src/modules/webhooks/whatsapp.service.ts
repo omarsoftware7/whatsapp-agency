@@ -662,8 +662,8 @@ export class WhatsappService {
     // Instagram
     if (igAccountId) {
       try {
-        // Instagram requires JPEG served from a plain public URL (Cloudflare-proxied R2 URLs
-        // are blocked by Meta's media fetcher). Convert to JPEG and serve from this API server.
+        // Instagram requires a publicly fetchable JPEG URL.
+        // Prefer durable R2 storage; fall back to local API-served file only if needed.
         let igImageUrl = imageUrl;
         try {
           const imgBuf = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20_000 });
@@ -681,15 +681,21 @@ export class WhatsappService {
             .jpeg({ quality: 92 })
             .toBuffer();
           this.logger.log(`📐 Image for IG: ${w}x${h} ratio=${ratio.toFixed(2)} resized=${needsResize}`);
-          // Use MEDIA_BASE_URL (Railway direct URL, no Cloudflare proxy) so Instagram can fetch
-          const apiBase = this.config.get<string>('MEDIA_BASE_URL') || this.config.get<string>('API_BASE_URL', '');
-          const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
           const filename = `ig_${jobId}_${Date.now()}.jpg`;
-          const dir = path.join(uploadsDir, 'generated');
-          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-          fs.writeFileSync(path.join(dir, filename), jpegBuf);
-          igImageUrl = `${apiBase}/api/files/generated/${filename}`;
-          this.logger.log(`📸 Serving Instagram image from API: ${igImageUrl}`);
+
+          if (this.r2.isConfigured()) {
+            const key = this.r2.buildKey('generated', filename);
+            igImageUrl = await this.r2.upload(key, jpegBuf, 'image/jpeg');
+            this.logger.log(`📸 Serving Instagram image from R2: ${igImageUrl}`);
+          } else {
+            const apiBase = (this.config.get<string>('MEDIA_BASE_URL') || this.config.get<string>('API_BASE_URL', '')).replace(/\/$/, '');
+            const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
+            const dir = path.join(uploadsDir, 'generated');
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, filename), jpegBuf);
+            igImageUrl = `${apiBase}/api/files/generated/${filename}`;
+            this.logger.log(`📸 Serving Instagram image from API: ${igImageUrl}`);
+          }
         } catch (e: any) {
           this.logger.warn(`JPEG prep failed, using original URL: ${e.message}`);
         }
