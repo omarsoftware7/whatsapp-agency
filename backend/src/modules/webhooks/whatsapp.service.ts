@@ -720,7 +720,56 @@ export class WhatsappService {
         } catch (e: any) {
           this.logger.warn(`JPEG prep failed, using original URL: ${e.message}`);
         }
-        const createRes = await axios.post(`${graphBase}/${igAccountId}/media`, null, { params: { image_url: igImageUrl, caption, access_token: pageToken } });
+        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+        const waitForImageReady = async (url: string, attempts = 6, delayMs = 2_000): Promise<boolean> => {
+          for (let i = 1; i <= attempts; i++) {
+            try {
+              const probe = await axios.get(url, {
+                responseType: 'arraybuffer',
+                timeout: 15_000,
+                validateStatus: () => true,
+              });
+              const contentType = String(probe.headers?.['content-type'] ?? '');
+              const bytes = Buffer.isBuffer(probe.data) ? probe.data.length : Number(probe.headers?.['content-length'] ?? 0);
+              const ok = probe.status === 200 && contentType.startsWith('image/') && bytes > 0;
+              this.logger.log(`🔎 IG media probe ${i}/${attempts}: status=${probe.status} ct=${contentType || 'n/a'} bytes=${bytes}`);
+              if (ok) return true;
+            } catch (e: any) {
+              this.logger.warn(`🔎 IG media probe ${i}/${attempts} failed: ${e.message}`);
+            }
+            if (i < attempts) await sleep(delayMs);
+          }
+          return false;
+        };
+
+        const mediaCandidates = [igImageUrl, imageUrl].filter((u, i, arr) => !!u && arr.indexOf(u) === i);
+        let createRes: any = null;
+        let lastCreateErr: any = null;
+        for (let idx = 0; idx < mediaCandidates.length; idx++) {
+          const candidateUrl = mediaCandidates[idx];
+          await waitForImageReady(candidateUrl);
+          try {
+            createRes = await axios.post(`${graphBase}/${igAccountId}/media`, null, {
+              params: { image_url: candidateUrl, caption, access_token: pageToken },
+            });
+            if (candidateUrl !== igImageUrl) {
+              this.logger.warn(`⚠️ Instagram accepted fallback media URL: ${candidateUrl}`);
+            }
+            break;
+          } catch (e: any) {
+            lastCreateErr = e;
+            const code = e?.response?.data?.error?.code;
+            const subcode = e?.response?.data?.error?.error_subcode;
+            const isFetchError = code === 9004 || subcode === 2207052;
+            if (isFetchError && idx < mediaCandidates.length - 1) {
+              this.logger.warn(`Instagram could not fetch candidate URL, retrying with fallback URL`);
+              await sleep(3_000);
+              continue;
+            }
+            throw e;
+          }
+        }
+        if (!createRes) throw lastCreateErr ?? new Error('Instagram media container creation failed');
         const containerId: string = createRes.data.id;
 
         // Poll for FINISHED
