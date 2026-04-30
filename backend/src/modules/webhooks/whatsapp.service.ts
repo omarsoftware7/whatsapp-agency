@@ -677,9 +677,11 @@ export class WhatsappService {
         } catch (e: any) { this.logger.warn(`IG account check failed: ${e.response?.data?.error?.message ?? e.message}`); }
 
         // Instagram requires a publicly fetchable JPEG URL.
-        // Use Facebook CDN URL if available (guaranteed accessible by Instagram)
+        // Use Facebook CDN URL if available — it's on Meta's own infrastructure so guaranteed accessible.
         let igImageUrl = fbCdnUrl ?? imageUrl;
-        try {
+        if (fbCdnUrl) {
+          this.logger.log(`📘 Using Facebook CDN URL for Instagram: ${fbCdnUrl}`);
+        } else try {
           const imgBuf = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20_000 });
           const raw = sharp(Buffer.from(imgBuf.data));
           const meta = await raw.metadata();
@@ -734,6 +736,7 @@ export class WhatsappService {
         } catch (e: any) {
           this.logger.warn(`JPEG prep failed, using original URL: ${e.message}`);
         }
+        this.logger.log(`📸 Final Instagram URL: ${igImageUrl}`);
         const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
         const waitForImageReady = async (url: string, attempts = 6, delayMs = 2_000): Promise<boolean> => {
           for (let i = 1; i <= attempts; i++) {
