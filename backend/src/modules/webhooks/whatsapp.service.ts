@@ -641,7 +641,6 @@ export class WhatsappService {
     const approvedIndex = data.approved_design_index ?? 0;
     const imageUrl = designs[approvedIndex];
     if (!imageUrl) throw new Error('No approved design found');
-    this.logger.log(`📸 Publishing image URL: ${imageUrl}`);
 
     const caption = this.formatAdCopyCaption(data.ad_copy ?? '');
     const graphVersion = this.config.get('META_GRAPH_VERSION', 'v18.0');
@@ -670,18 +669,10 @@ export class WhatsappService {
     // Instagram
     if (igAccountId) {
       try {
-        // Diagnose IG account type (must be BUSINESS or MEDIA_CREATOR, not PERSONAL)
-        try {
-          const igRes = await axios.get(`${graphBase}/${igAccountId}`, { params: { fields: 'id,name,username,account_type,followers_count', access_token: pageToken } });
-          this.logger.log(`📱 IG account: ${JSON.stringify(igRes.data)}`);
-        } catch (e: any) { this.logger.warn(`IG account check failed: ${e.response?.data?.error?.message ?? e.message}`); }
-
-        // Instagram requires a publicly fetchable JPEG URL.
-        // Use Facebook CDN URL if available — it's on Meta's own infrastructure so guaranteed accessible.
+        // Use Facebook CDN URL — on Meta's own infrastructure, guaranteed accessible by Instagram.
+        // Fall back to JPEG conversion if Facebook post failed.
         let igImageUrl = fbCdnUrl ?? imageUrl;
-        if (fbCdnUrl) {
-          this.logger.log(`📘 Using Facebook CDN URL for Instagram: ${fbCdnUrl}`);
-        } else try {
+        if (!fbCdnUrl) try {
           const imgBuf = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20_000 });
           const raw = sharp(Buffer.from(imgBuf.data));
           const meta = await raw.metadata();
@@ -736,7 +727,6 @@ export class WhatsappService {
         } catch (e: any) {
           this.logger.warn(`JPEG prep failed, using original URL: ${e.message}`);
         }
-        this.logger.log(`📸 Final Instagram URL: ${igImageUrl}`);
         const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
         const waitForImageReady = async (url: string, attempts = 6, delayMs = 2_000): Promise<boolean> => {
           for (let i = 1; i <= attempts; i++) {
