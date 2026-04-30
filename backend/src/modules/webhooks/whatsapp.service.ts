@@ -662,14 +662,11 @@ export class WhatsappService {
     // Instagram
     if (igAccountId) {
       try {
-        // Diagnose token permissions
+        // Diagnose IG account type (must be BUSINESS or MEDIA_CREATOR, not PERSONAL)
         try {
-          const permRes = await axios.get(`${graphBase}/me/permissions`, { params: { access_token: pageToken } });
-          const granted = (permRes.data.data ?? []).filter((p: any) => p.status === 'granted').map((p: any) => p.permission);
-          this.logger.log(`🔑 Token permissions: ${granted.join(', ')}`);
-          const igRes = await axios.get(`${graphBase}/${igAccountId}`, { params: { fields: 'id,name,username', access_token: pageToken } });
+          const igRes = await axios.get(`${graphBase}/${igAccountId}`, { params: { fields: 'id,name,username,account_type,followers_count', access_token: pageToken } });
           this.logger.log(`📱 IG account: ${JSON.stringify(igRes.data)}`);
-        } catch (e: any) { this.logger.warn(`Permission check failed: ${e.message}`); }
+        } catch (e: any) { this.logger.warn(`IG account check failed: ${e.response?.data?.error?.message ?? e.message}`); }
 
         // Instagram requires a publicly fetchable JPEG URL.
         // Prefer durable R2 storage; fall back to local API-served file only if needed.
