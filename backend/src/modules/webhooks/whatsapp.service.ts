@@ -685,8 +685,29 @@ export class WhatsappService {
 
           if (this.r2.isConfigured()) {
             const key = this.r2.buildKey('generated', filename);
-            igImageUrl = await this.r2.upload(key, jpegBuf, 'image/jpeg');
-            this.logger.log(`📸 Serving Instagram image from R2: ${igImageUrl}`);
+            const uploadedUrl = await this.r2.upload(key, jpegBuf, 'image/jpeg');
+
+            // Some CDN frontends block Meta crawler user-agents. For IG ingestion, prefer
+            // an explicit Meta media base URL, then source image's r2.dev origin when possible.
+            const metaMediaBase = this.config.get<string>('META_MEDIA_BASE_URL', '').replace(/\/$/, '');
+            if (metaMediaBase) {
+              igImageUrl = `${metaMediaBase}/${key}`;
+              this.logger.log(`📸 Serving Instagram image from META_MEDIA_BASE_URL: ${igImageUrl}`);
+            } else {
+              try {
+                const sourceUrl = new URL(imageUrl);
+                if (sourceUrl.hostname.endsWith('.r2.dev')) {
+                  igImageUrl = `${sourceUrl.origin}/${key}`;
+                  this.logger.log(`📸 Serving Instagram image from source r2.dev origin: ${igImageUrl}`);
+                } else {
+                  igImageUrl = uploadedUrl;
+                  this.logger.log(`📸 Serving Instagram image from R2 public URL: ${igImageUrl}`);
+                }
+              } catch {
+                igImageUrl = uploadedUrl;
+                this.logger.log(`📸 Serving Instagram image from R2 public URL: ${igImageUrl}`);
+              }
+            }
           } else {
             const apiBase = (this.config.get<string>('MEDIA_BASE_URL') || this.config.get<string>('API_BASE_URL', '')).replace(/\/$/, '');
             const uploadsDir = this.config.get<string>('UPLOADS_DIR', './uploads');
