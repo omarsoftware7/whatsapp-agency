@@ -649,11 +649,19 @@ export class WhatsappService {
     const results: Record<string, any> = {};
 
     // Facebook
+    let fbCdnUrl: string | null = null;
     if (pageId) {
       try {
         const res = await axios.post(`${graphBase}/${pageId}/photos`, null, { params: { url: imageUrl, caption, access_token: pageToken } });
         results.facebook = { success: true, post_id: res.data.id };
         await this.jobRepo.update(jobId, { facebook_post_id: res.data.id });
+        // Fetch the Facebook CDN URL — guaranteed accessible by Instagram since same infrastructure
+        try {
+          const picRes = await axios.get(`${graphBase}/${res.data.id}`, { params: { fields: 'images', access_token: pageToken } });
+          const images: any[] = picRes.data.images ?? [];
+          const best = images.sort((a: any, b: any) => (b.width ?? 0) - (a.width ?? 0))[0];
+          if (best?.source) { fbCdnUrl = best.source; this.logger.log(`📘 FB CDN URL: ${fbCdnUrl}`); }
+        } catch { /* non-fatal */ }
       } catch (e: any) {
         results.facebook = { success: false, error: e.response?.data?.error?.message ?? e.message };
       }
@@ -669,8 +677,8 @@ export class WhatsappService {
         } catch (e: any) { this.logger.warn(`IG account check failed: ${e.response?.data?.error?.message ?? e.message}`); }
 
         // Instagram requires a publicly fetchable JPEG URL.
-        // Prefer durable R2 storage; fall back to local API-served file only if needed.
-        let igImageUrl = imageUrl;
+        // Use Facebook CDN URL if available (guaranteed accessible by Instagram)
+        let igImageUrl = fbCdnUrl ?? imageUrl;
         try {
           const imgBuf = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20_000 });
           const raw = sharp(Buffer.from(imgBuf.data));
