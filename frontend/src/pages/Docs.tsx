@@ -300,7 +300,7 @@ export default function Docs() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-gray-200 text-center text-gray-400 text-sm">
-          Launcho — Generative AI Developer Growth Lab, Place-IL
+          Launcho — by Omar Software
         </div>
       </div>
     </div>
