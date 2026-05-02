@@ -20,10 +20,12 @@ import AdminMetrics from './pages/admin/AdminMetrics';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminBrands from './pages/admin/AdminBrands';
 import AdminJobs from './pages/admin/AdminJobs';
+import Docs from './pages/Docs';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/register', element: <Register /> },
+  { path: '/docs', element: <Docs /> },
   {
     path: '/onboarding',
     element: <ProtectedRoute><Onboarding /></ProtectedRoute>,
