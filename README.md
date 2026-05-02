@@ -196,4 +196,4 @@ Set all environment variables in the Railway service settings. PostgreSQL is pro
 
 ---
 
-Developed as part of the **Generative AI Developer Growth Lab — Place-IL**
+Developed Omar-Software
