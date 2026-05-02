@@ -441,4 +441,4 @@ All endpoints are prefixed with `/api`.
 
 ---
 
-*Launcho — Generative AI Developer Growth Lab, Place-IL*
+*Launcho — by Omar-Software*
