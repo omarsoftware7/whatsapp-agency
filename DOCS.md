@@ -441,4 +441,4 @@ All endpoints are prefixed with `/api`.
 
 ---
 
-*Launcho — by Omar-Software*
+*Launcho — by Omar Software*
