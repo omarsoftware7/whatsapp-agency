@@ -8,8 +8,6 @@
 
 Launcho is a SaaS platform that lets business owners run social media ad campaigns entirely through WhatsApp. A client sends a product image and a short description via WhatsApp → the AI generates a professional design and ad copy → the client approves each step via chat → the post goes live on Facebook and Instagram automatically.
 
-Built as a full capstone project for the **Generative AI Developer Growth Lab — Place-IL**.
-
 **[Full User & Developer Documentation →](./DOCS.md)**
 
 ---
